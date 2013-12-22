@@ -15,6 +15,9 @@ object Build extends Build {
     scalaVersion := "2.10.3",
     crossScalaVersions := Seq("2.10.3"),
     fork := true,
+    resolvers += Resolver.sonatypeRepo("releases"),
+    libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0-M1" cross CrossVersion.full),
     scalacOptions ++= Seq(
       "-encoding", "utf-8",
       "-target:jvm-1.7",
@@ -36,7 +39,7 @@ object Build extends Build {
 
   lazy val core = project configure common libs libraries.core
 
-  lazy val json = project configure common libs libraries.json
+  lazy val json = project configure common libs libraries.json dependsOn core
 
   lazy val root = project in file(".") configure common libs libraries.common aggregate (macros, core, json) settings (publishArtifact := false)
 }
