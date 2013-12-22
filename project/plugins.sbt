@@ -7,3 +7,5 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-scalariform" % "1.2.1")
 addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.1.2")
 
 addSbtPlugin("com.github.mpeltonen" % "sbt-idea" % "1.5.2")
+
+addSbtPlugin("com.typesafe.sbt" % "sbt-license-report" % "0.1")
