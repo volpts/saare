@@ -24,8 +24,6 @@ class JsonSpec extends WordSpec {
       val test = (""" {"test": {"test": 100, "test2": null }, "test2": [100, 200, 300], "test3": 10.5, "test4": { "test5" : 100, "test6" : 3.4} } """ |> parse).get
       case class Test(test: Int, test2: Option[Long], test3: Option[Boolean])
       case class Test2(test: Test, test2: Seq[BigInt], test3: Double, test4: Map[String, BigDecimal])
-      implicit val TestCodec = CaseClassCodec[Test]
-      implicit val Test2Codec = CaseClassCodec[Test2]
       assert(decode[Test2](test) === Some(Test2(Test(100, None, None), Seq(100, 200, 300), 10.5, Map("test5" -> 100, "test6" -> 3.4))))
     }
   }
@@ -38,8 +36,6 @@ class JsonSpec extends WordSpec {
       val test = (""" {"test": {"test": 100}, "test2": [100, 200, 300], "test3": 10.5, "test4": { "test5" : 100, "test6" : 3.4} } """ |> parse).get
       case class Test(test: Int, test2: Option[Long], test3: Option[Boolean])
       case class Test2(test: Test, test2: Seq[BigInt], test3: Double, test4: Map[String, BigDecimal])
-      implicit val TestCodec = CaseClassCodec[Test]
-      implicit val Test2Codec = CaseClassCodec[Test2]
       assert(encode(Test2(Test(100, None, None), Seq(100, 200, 300), 10.5, Map("test5" -> 100, "test6" -> 3.4))) === test)
     }
   }

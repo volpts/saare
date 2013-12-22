@@ -157,5 +157,5 @@ package object json {
     // println(src) // debug print
     c.Expr[json.Codec[A]](src)
   }
-  def CaseClassCodec[A]: json.Codec[A] = macro CaseClassCodecImpl[A]
+  implicit def CaseClassCodec[A]: json.Codec[A] = macro CaseClassCodecImpl[A]
 }
