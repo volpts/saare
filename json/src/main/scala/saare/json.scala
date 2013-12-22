@@ -24,7 +24,7 @@ package object json {
   case object JNull extends JValue
   private[json] object JNothing extends JValue
 
-  def as[A <: JValue: ClassTag] = {
+  def as[A <: JValue: ClassTag]: JValue => Option[A] /* I don't understand why this type annotation is required... */ = {
     def f(x: JValue): Option[A] = x match {
       case x: JValue if implicitly[ClassTag[A]].runtimeClass isAssignableFrom x.getClass => Some(x.asInstanceOf[A])
       case _ => None
