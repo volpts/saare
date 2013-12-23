@@ -21,6 +21,11 @@ package object saare {
     def #|>[B](f: A => B) = f(self)
   }
 
+  def as[A: ClassTag]: Any => Option[A] = {
+    case x if implicitly[ClassTag[A]].runtimeClass isAssignableFrom x.getClass => Some(x.asInstanceOf[A])
+    case _ => None
+  }
+
   implicit class BigDecimalOps(val self: BigDecimal) extends AnyVal {
     def toIntOption = allCatch[Int].opt(self.toIntExact)
 
