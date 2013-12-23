@@ -21,7 +21,7 @@ package object saare {
     def #|>[B](f: A => B) = f(self)
   }
 
-  implicit class BigDecimalW(val self: BigDecimal) extends AnyVal {
+  implicit class BigDecimalOps(val self: BigDecimal) extends AnyVal {
     def toIntOption = allCatch[Int].opt(self.toIntExact)
 
     def toLongOption = allCatch[Long].opt(self.toLongExact)
