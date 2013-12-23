@@ -22,6 +22,15 @@ object Dependencies {
 
   val slf4j = "org.slf4j" % "slf4j-api" % "1.7.5"
 
+  object netty {
+    object constants {
+      val version = "4.0.13.Final"
+      val name = "netty"
+      val group = "io.netty"
+    }
+    import constants._
+    val Seq(buffer) = Seq("buffer").map(a => group % s"$name-a" % version)
+  }
   object jackson {
     object constants {
       val version = "2.3.0"
@@ -45,7 +54,7 @@ object Dependencies {
     private[this] def d = Dependencies
     val common = Seq(slf4j, scalatest % test, logback % test)
     val macros = common ++ Seq()
-    val core = common ++ Seq()
+    val core = common ++ Seq(netty.buffer)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
   }
 }
