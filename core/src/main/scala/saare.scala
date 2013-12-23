@@ -40,6 +40,10 @@ package object saare {
   }
 
   implicit class StringOps(val self: String) extends AnyVal {
-    def parseInt(radix: Int = 10): Option[Int] = allCatch[Int].opt(java.lang.Integer.parseInt(self, radix))
+    def parseInt(radix: Int = 10) = allCatch[Int].opt(java.lang.Integer.parseInt(self, radix))
+    def parseLong(radix: Int = 10) = allCatch[Long].opt(java.lang.Long.parseLong(self, radix))
+    def parseDouble = allCatch[Double].opt(java.lang.Double.parseDouble(self))
+    def parseBigInt(radix: Int = 10) = allCatch[BigInt].opt(BigInt(self, radix))
+    def parseBigDecimal: Option[BigDecimal] = allCatch[BigDecimal].opt(BigDecimal(self))
   }
 }
