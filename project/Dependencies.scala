@@ -29,7 +29,7 @@ object Dependencies {
       val group = "io.netty"
     }
     import constants._
-    val Seq(buffer) = Seq("buffer").map(a => group % s"$name-a" % version)
+    val Seq(buffer, http) = Seq("buffer", "codec-http").map(a => group % s"$name-a" % version)
   }
   object jackson {
     object constants {
@@ -56,5 +56,6 @@ object Dependencies {
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
+    val http = common ++ Seq(netty.http)
   }
 }
