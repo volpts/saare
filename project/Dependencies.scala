@@ -29,7 +29,7 @@ object Dependencies {
       val group = "io.netty"
     }
     import constants._
-    val Seq(buffer, http) = Seq("buffer", "codec-http").map(a => group % s"$name-a" % version)
+    val Seq(buffer, http) = Seq("buffer", "codec-http").map(a => group % s"$name-$a" % version)
   }
   object jackson {
     object constants {
