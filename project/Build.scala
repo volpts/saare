@@ -27,7 +27,7 @@ object Build extends Build {
     javaOptions := Seq("-Xms1024m"),
     organization := "info.sumito3478",
     scalaVersion := "2.10.3",
-    crossScalaVersions := Seq("2.10.3"),
+    crossScalaVersions := Seq("2.10.3", "2.11.0-M7"),
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
