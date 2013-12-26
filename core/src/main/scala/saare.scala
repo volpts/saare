@@ -15,7 +15,24 @@ limitations under the License.
 package saare
 import scala.util.control.Exception._
 import scala.reflect._
+import scala.language.experimental.macros
 
+trait Logging {
+  self =>
+  object logger {
+    val underlying = org.slf4j.LoggerFactory.getLogger(self.getClass.getName)
+    def error(msg: String): Unit = macro Macros.Logger.errorImpl
+    def error(msg: String, e: Throwable): Unit = macro Macros.Logger.errorThrowableImpl
+    def warn(msg: String): Unit = macro Macros.Logger.warnImpl
+    def warn(msg: String, e: Throwable): Unit = macro Macros.Logger.warnThrowableImpl
+    def info(msg: String): Unit = macro Macros.Logger.infoImpl
+    def info(msg: String, e: Throwable): Unit = macro Macros.Logger.infoThrowableImpl
+    def debug(msg: String): Unit = macro Macros.Logger.debugImpl
+    def debug(msg: String, e: Throwable): Unit = macro Macros.Logger.debugThrowableImpl
+    def trace(msg: String): Unit = macro Macros.Logger.traceImpl
+    def trace(msg: String, e: Throwable): Unit = macro Macros.Logger.traceThrowableImpl
+  }
+}
 package object Saare {
   implicit class AnyOps[A](val self: A) extends AnyVal {
     def |>[B](f: A => B) = f(self)
