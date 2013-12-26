@@ -12,10 +12,11 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
  */
-package object saare {
-  import scala.util.control.Exception._
-  import scala.reflect._
+package saare
+import scala.util.control.Exception._
+import scala.reflect._
 
+package object Saare {
   implicit class AnyOps[A](val self: A) extends AnyVal {
     def |>[B](f: A => B) = f(self)
     def #|>[B](f: A => B) = f(self)

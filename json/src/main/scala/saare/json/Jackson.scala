@@ -16,6 +16,8 @@ package saare
 package json
 
 private[json] object Jackson {
+  import saare._, Saare._
+  import json._, Json._
   import com.fasterxml.jackson
   import jackson.core._
   import jackson.databind._

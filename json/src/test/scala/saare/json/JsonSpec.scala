@@ -18,6 +18,8 @@ package json
 import org.scalatest._
 
 class JsonSpec extends WordSpec {
+  import saare._, Saare._
+  import json._, Json._
   "json.lens" should {
     "lens the jvalue" in {
       val json = """ { "test": 100, "test2": [10, 20], "test3": { "test" : 100 } } """
