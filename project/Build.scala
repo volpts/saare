@@ -58,7 +58,7 @@ object Build extends Build {
 
   lazy val `core-macros` = project configure common libs libraries.macros
 
-  lazy val core = project configure common libs libraries.core
+  lazy val core = project configure common libs libraries.core dependsOn `core-macros`
 
   lazy val json = project configure common libs libraries.json dependsOn core
 
