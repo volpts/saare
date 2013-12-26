@@ -18,7 +18,7 @@ import Keys._
 object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.0"
+  val scalatest = "org.scalatest" %% "scalatest" % "2.0+" // we need 2.0.1-SNAP<n> for Scala 2.11.0
 
   val slf4j = "org.slf4j" % "slf4j-api" % "1.7.5"
 
