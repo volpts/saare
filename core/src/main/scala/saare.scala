@@ -16,21 +16,21 @@ package saare
 import scala.util.control.Exception._
 import scala.reflect._
 import scala.language.experimental.macros
+import java.util.concurrent.atomic._
+import scala.concurrent._
 
-trait Logging {
+trait Logging[Repr] {
   self =>
-  object logger {
-    val underlying = org.slf4j.LoggerFactory.getLogger(self.getClass.getName)
-    def error(msg: String): Unit = macro Macros.Logger.errorImpl
-    def error(msg: String, e: Throwable): Unit = macro Macros.Logger.errorThrowableImpl
-    def warn(msg: String): Unit = macro Macros.Logger.warnImpl
-    def warn(msg: String, e: Throwable): Unit = macro Macros.Logger.warnThrowableImpl
-    def info(msg: String): Unit = macro Macros.Logger.infoImpl
-    def info(msg: String, e: Throwable): Unit = macro Macros.Logger.infoThrowableImpl
-    def debug(msg: String): Unit = macro Macros.Logger.debugImpl
-    def debug(msg: String, e: Throwable): Unit = macro Macros.Logger.debugThrowableImpl
-    def trace(msg: String): Unit = macro Macros.Logger.traceImpl
-    def trace(msg: String, e: Throwable): Unit = macro Macros.Logger.traceThrowableImpl
+  private[this] val _logger = new AtomicReference[Macros.Logger]()
+  def logger(implicit typeNameable: Macros.TypeNameable[Repr]): Macros.Logger = {
+    val ret = _logger.get
+    if (ret == null) {
+      val newLogger = new Macros.Logger {
+        val underlying = org.slf4j.LoggerFactory.getLogger(Saare.fullTypeName[Repr])
+      }
+      _logger.compareAndSet(null, newLogger)
+      _logger.get
+    } else ret
   }
 }
 object Saare {

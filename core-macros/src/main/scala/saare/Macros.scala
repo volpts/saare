@@ -30,9 +30,22 @@ object Macros {
   }
   implicit def materializeTypeNameable[A] = macro materializeTypeNameableImpl[A]
 
+  trait Logger {
+    val underlying: org.slf4j.Logger
+    def error(msg: String): Unit = macro Macros.Logger.errorImpl
+    def error(msg: String, e: Throwable): Unit = macro Macros.Logger.errorThrowableImpl
+    def warn(msg: String): Unit = macro Macros.Logger.warnImpl
+    def warn(msg: String, e: Throwable): Unit = macro Macros.Logger.warnThrowableImpl
+    def info(msg: String): Unit = macro Macros.Logger.infoImpl
+    def info(msg: String, e: Throwable): Unit = macro Macros.Logger.infoThrowableImpl
+    def debug(msg: String): Unit = macro Macros.Logger.debugImpl
+    def debug(msg: String, e: Throwable): Unit = macro Macros.Logger.debugThrowableImpl
+    def trace(msg: String): Unit = macro Macros.Logger.traceImpl
+    def trace(msg: String, e: Throwable): Unit = macro Macros.Logger.traceThrowableImpl
+  }
   object Logger {
     type Context = scala.reflect.macros.Context {
-      type PrefixType = { val underlying: org.slf4j.Logger }
+      type PrefixType = Logger
     }
     def errorImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {
       import c.universe._
