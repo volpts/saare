@@ -33,6 +33,26 @@ trait Logging[Repr] {
     } else ret
   }
 }
+trait Disposable[Repr] extends Logging[Repr] {
+  def disposeInternal: Unit
+
+  private[this] val disposed = new AtomicBoolean(false)
+
+  def dispose = if (disposed.compareAndSet(false, true)) disposeInternal
+
+  def disposeAsync(implicit ec: ExecutionContext): Option[Future[Unit]] =
+    if (disposed.compareAndSet(false, true))
+      Some(future {
+        dispose
+      })
+    else None
+
+  override def finalize =
+    if (!disposed.get) {
+      logger.warn(s"$this - calling dispose from finalizer!")
+      dispose
+    }
+}
 object Saare {
   implicit class AnyOps[A](val self: A) extends AnyVal {
     def |>[B](f: A => B) = f(self)
@@ -68,4 +88,9 @@ object Saare {
     def parseBigInt(radix: Int = 10) = allCatch[BigInt].opt(BigInt(self, radix))
     def parseBigDecimal: Option[BigDecimal] = allCatch[BigDecimal].opt(BigDecimal(self))
   }
+
+  def dispose_![A, B](implicit ev: A => Disposable[_]): A => (A => B) => B = x => f => try f(x) finally x.dispose
+
+  def disposing[A, B](implicit ev: A => Disposable[_], ec: ExecutionContext): A => (A => Future[B]) => Future[B] =
+    x => f => f(x) transform (y => { x.dispose; y }, e => { x.dispose; e })
 }
