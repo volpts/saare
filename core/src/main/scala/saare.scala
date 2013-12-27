@@ -44,6 +44,10 @@ object Saare {
     case _ => None
   }
 
+  def typeName[A: Macros.TypeNameable] = implicitly[Macros.TypeNameable[A]].name
+
+  def fullTypeName[A: Macros.TypeNameable] = implicitly[Macros.TypeNameable[A]].fullName
+
   implicit class BigDecimalOps(val self: BigDecimal) extends AnyVal {
     def toIntOption = allCatch[Int].opt(self.toIntExact)
 

@@ -18,6 +18,18 @@ import scala.language.experimental.macros
 import scala.reflect.macros.Context
 
 object Macros {
+  trait TypeNameable[A] {
+    def fullName: String
+    def name: String
+  }
+  def materializeTypeNameableImpl[A: c.WeakTypeTag](c: Context): c.Expr[Macros.TypeNameable[A]] = {
+    import c.universe._
+    val a = weakTypeOf[A]
+    val typeNameable = weakTypeOf[TypeNameable[A]]
+    c.Expr[Macros.TypeNameable[A]](q"new $typeNameable { def fullName = ${a.typeSymbol.fullName} ; def name = ${a.typeSymbol.name.decoded} }")
+  }
+  implicit def materializeTypeNameable[A] = macro materializeTypeNameableImpl[A]
+
   object Logger {
     type Context = scala.reflect.macros.Context {
       type PrefixType = { val underlying: org.slf4j.Logger }
