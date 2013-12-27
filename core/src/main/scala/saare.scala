@@ -33,7 +33,7 @@ trait Logging {
     def trace(msg: String, e: Throwable): Unit = macro Macros.Logger.traceThrowableImpl
   }
 }
-package object Saare {
+object Saare {
   implicit class AnyOps[A](val self: A) extends AnyVal {
     def |>[B](f: A => B) = f(self)
     def #|>[B](f: A => B) = f(self)
