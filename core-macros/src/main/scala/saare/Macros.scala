@@ -60,42 +60,42 @@ object Macros {
     def warnImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg)")
+      c.Expr[Unit](q"if ($prefix.underlying.isWarnEnabled) $prefix.underlying.warn($msg)")
     }
     def warnThrowableImpl(c: Context)(msg: c.Expr[String], e: c.Expr[Throwable]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg, $e)")
+      c.Expr[Unit](q"if ($prefix.underlying.isWarnEnabled) $prefix.underlying.warn($msg, $e)")
     }
     def infoImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg)")
+      c.Expr[Unit](q"if ($prefix.underlying.isInfoEnabled) $prefix.underlying.info($msg)")
     }
     def infoThrowableImpl(c: Context)(msg: c.Expr[String], e: c.Expr[Throwable]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg, $e)")
+      c.Expr[Unit](q"if ($prefix.underlying.isInfoEnabled) $prefix.underlying.info($msg, $e)")
     }
     def debugImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg)")
+      c.Expr[Unit](q"if ($prefix.underlying.isDebugEnabled) $prefix.underlying.debug($msg)")
     }
     def debugThrowableImpl(c: Context)(msg: c.Expr[String], e: c.Expr[Throwable]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg, $e)")
+      c.Expr[Unit](q"if ($prefix.underlying.isDebugEnabled) $prefix.underlying.debug($msg, $e)")
     }
     def traceImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg)")
+      c.Expr[Unit](q"if ($prefix.underlying.isTraceEnabled) $prefix.underlying.trace($msg)")
     }
     def traceThrowableImpl(c: Context)(msg: c.Expr[String], e: c.Expr[Throwable]): c.Expr[Unit] = {
       import c.universe._
       val prefix = q"${c.prefix}"
-      c.Expr[Unit](q"if ($prefix.underlying.isErrorEnabled) $prefix.underlying.error($msg, $e)")
+      c.Expr[Unit](q"if ($prefix.underlying.isTraceEnabled) $prefix.underlying.trace($msg, $e)")
     }
   }
 }
