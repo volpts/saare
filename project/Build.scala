@@ -22,6 +22,8 @@ object Build extends Build {
     SbtScalariform.ScalariformKeys.preferences := FormattingPreferences()
       .setPreference(DoubleIndentClassDeclaration, true))
 
+  import fmpp.FmppPlugin._
+
   lazy val commonSettings = Seq(
     version := "0.0.1-SNAPSHOT",
     javaOptions := Seq("-Xms1024m"),
@@ -44,11 +46,12 @@ object Build extends Build {
       "-target:jvm-1.7",
       "-deprecation",
       "-feature",
-      "-unchecked")) ++ scalariformSettings
+      "-unchecked")) ++ scalariformSettings ++ fmppSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
       .settings(commonSettings: _*)
+      .configs(Fmpp)
 
   implicit class ProjectW(val self: Project) extends AnyVal {
     def libs(xs: Seq[ModuleID]) = self.settings(libraryDependencies ++= xs)
