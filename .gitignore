@@ -3,6 +3,7 @@
 /project/target
 /project/project/target
 /*/target
+/*/project/*
 
 # eclipse
 /.project
