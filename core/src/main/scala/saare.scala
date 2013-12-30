@@ -92,6 +92,29 @@ object Saare {
     def parseBigInt(radix: Int = 10) = allCatch[BigInt].opt(BigInt(self, radix))
     def parseBigDecimal: Option[BigDecimal] = allCatch[BigDecimal].opt(BigDecimal(self))
   }
+  private[this] val le = (0xcafebabe >>> 16) == 0xcafe
+  private[this] val be = !le
+  implicit class ShortOps(val self: Short) extends AnyVal {
+    def bswap: Short = java.lang.Short.reverseBytes(self)
+    def toLE: Short = if (be) bswap else self
+    def toBE: Short = if (le) bswap else self
+    def fromLE: Short = if (be) bswap else self
+    def fromBE: Short = if (le) bswap else self
+  }
+  implicit class IntOps(val self: Int) extends AnyVal {
+    def bswap: Int = java.lang.Integer.reverseBytes(self)
+    def toLE: Int = if (be) bswap else self
+    def toBE: Int = if (le) bswap else self
+    def fromLE: Int = if (be) bswap else self
+    def fromBE: Int = if (le) bswap else self
+  }
+  implicit class LongOps(val self: Long) extends AnyVal {
+    def bswap: Long = java.lang.Long.reverseBytes(self)
+    def toLE: Long = if (be) bswap else self
+    def toBE: Long = if (le) bswap else self
+    def fromLE: Long = if (be) bswap else self
+    def fromBE: Long = if (le) bswap else self
+  }
 
   def dispose_![A, B](implicit ev: A => Disposable[_]): A => (A => B) => B = x => f => try f(x) finally x.dispose
 
