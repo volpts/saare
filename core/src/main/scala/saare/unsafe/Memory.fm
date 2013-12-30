@@ -1,0 +1,72 @@
+/*Copyright 2013 sumito3478 <sumito3478@gmail.com>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+ */
+package saare
+package unsafe
+
+import java.nio._
+
+private[saare] sealed trait Memory {
+  def off: Long
+  def len: Long
+}
+
+<#assign valueTypes = ["Byte", "Char", "Short", "Int", "Long", "Float", "Double"]>
+
+<#list valueTypes as type>
+private[saare] case class ${type}HeapMemory(buf: Array[${type}], off: Long, len: Long) extends Memory
+</#list>
+
+private[saare] case class NativeMemory(buf: Long, off: Long, len: Long) extends Memory
+
+private[saare] sealed trait MemoryViewable[A] {
+  def view(x: A, off: Long, len: Long): Memory
+}
+
+private[saare] object Memory extends Logging[Memory] {
+  import Saare._
+  import Unsafe._
+  def view[A: MemoryViewable]: A => Long => Long => Memory = x => off => len => implicitly[MemoryViewable[A]].view(x, off, len)
+  implicit val memoryIsMemoryViewable =
+    new MemoryViewable[Memory] {
+      def view(x: Memory, off: Long, len: Long): Memory = {
+        if (!(0 <= off && 0 <= len && (off + len) <= (x.off + x.len)))
+          throw new IndexOutOfBoundsException
+        x
+      }
+    }
+  implicit val byteBufferIsMemoryViewable =
+    new MemoryViewable[ByteBuffer] {
+      def view(x: ByteBuffer, off: Long, len: Long): Memory = {
+        if (!(0 <= off && 0 <= len && (off + len) <= x.capacity))
+          throw new IndexOutOfBoundsException
+        val p = x |> byteBufferAddress
+        p match {
+          case p if x.isDirect && p != 0 => new NativeMemory(p, off, len)
+          case p if !x.isDirect => new ByteHeapMemory(x.array, off, len)
+          case p => sys.error(s"Direct buffer $x points to NULL")
+        }
+      }
+    }
+  <#list valueTypes as type>
+  implicit val ${type?lower_case}ArrayIsMemoryViewable =
+    new MemoryViewable[Array[${type}]] {
+      def view(x: Array[${type}], off: Long, len: Long): Memory = {
+        if (!(0 <= off && 0 <= len && (off + len) <= x.length))
+          throw new IndexOutOfBoundsException
+        new ${type}HeapMemory(x, off, len)
+      }
+    }
+  </#list>
+}
