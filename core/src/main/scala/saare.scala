@@ -58,6 +58,10 @@ object Saare {
     def |>[B](f: A => B) = f(self)
     def #|>[B](f: A => B) = f(self)
   }
+  implicit class FunctionOps[A, B](val self: A => B) extends AnyVal {
+    def |<(x: A) = self(x)
+    def #|<(x: A) = self(x)
+  }
 
   def as[A: ClassTag]: Any => Option[A] = {
     case x if implicitly[ClassTag[A]].runtimeClass isAssignableFrom x.getClass => Some(x.asInstanceOf[A])
