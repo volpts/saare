@@ -22,6 +22,8 @@ object Dependencies {
 
   val slf4j = "org.slf4j" % "slf4j-api" % "1.7.5"
 
+  val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
+
   object netty {
     object constants {
       val version = "4.0.13.Final"
@@ -55,6 +57,7 @@ object Dependencies {
     val common = Seq(slf4j, scalatest % test, logback % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
+    val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
     val http = common ++ Seq(netty.http)
   }
