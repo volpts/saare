@@ -35,7 +35,7 @@ object Dependencies {
   }
   object jackson {
     object constants {
-      val version = "2.3.0"
+      val version = "2.3.1"
       val name = "jackson"
       object group {
         val prefix = s"com.fasterxml.$name"
