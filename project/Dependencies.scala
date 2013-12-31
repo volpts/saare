@@ -26,7 +26,7 @@ object Dependencies {
 
   object netty {
     object constants {
-      val version = "4.0.13.Final"
+      val version = "4.0.14.Final"
       val name = "netty"
       val group = "io.netty"
     }
