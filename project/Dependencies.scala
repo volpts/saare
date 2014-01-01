@@ -24,6 +24,8 @@ object Dependencies {
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
+  val async_http_client = "com.ning" % "async-http-client" % "1.7.23"
+
   object netty {
     object constants {
       val version = "4.0.14.Final"
@@ -59,6 +61,6 @@ object Dependencies {
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
-    val http = common ++ Seq(netty.http)
+    val http = common ++ Seq(async_http_client)
   }
 }
