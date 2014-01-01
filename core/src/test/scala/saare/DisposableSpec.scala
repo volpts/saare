@@ -15,8 +15,8 @@ limitations under the License.
 package saare
 
 import org.scalatest._
+import scala.concurrent._
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Await
 import scala.concurrent.duration.Duration
 
 class DisposableSpec extends WordSpec with Logging[DisposableSpec] {
@@ -27,9 +27,13 @@ class DisposableSpec extends WordSpec with Logging[DisposableSpec] {
       class A extends Disposable[A] {
         override def disposeInternal = a = true
       }
-      val f = ((a: A) => scala.concurrent.future {
-        ()
-      }) |> new A #|> disposing[A, Unit]
+      val f = new A |> disposing[A, Unit] |< {
+        a =>
+          future {
+            // do something...
+            ()
+          }
+      }
       Await.result(f, Duration.Inf)
       assert(a === true)
     }
