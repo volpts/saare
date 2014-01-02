@@ -29,7 +29,7 @@ class DisposableSpec extends WordSpec with Logging[DisposableSpec] {
       }
       val f = disposing(new A) {
         a =>
-          future {
+          Future {
             // do something...
             ()
           }

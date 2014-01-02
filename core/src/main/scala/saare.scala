@@ -42,7 +42,7 @@ trait Disposable[Repr] extends Logging[Repr] {
 
   def disposeAsync(implicit ec: ExecutionContext): Option[Future[Unit]] =
     if (disposed.compareAndSet(false, true))
-      Some(future {
+      Some(Future {
         dispose
       })
     else None
