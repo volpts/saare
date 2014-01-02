@@ -50,13 +50,16 @@ object Dependencies {
     val Seq(core, databind) = Seq("core", "databind").map(a => group.core % s"$name-$a" % version)
     val Seq(afterburner) = Seq("afterburner").map(a => group.module % s"$module-$a" % version)
   }
+  object commons {
+    val io = "commons-io" % "commons-io" % "2.4"
+  }
   object libraries {
     object constants {
       val test = "test"
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j, scalatest % test, logback % test)
+    val common = Seq(slf4j, commons.io, scalatest % test, logback % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
