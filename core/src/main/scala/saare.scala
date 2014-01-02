@@ -53,6 +53,9 @@ trait Disposable[Repr] extends Logging[Repr] {
       dispose
     }
 }
+trait AsDisposable[A] {
+  def asDisposable(x: A): Disposable[_]
+}
 object Saare {
   implicit class AnyOps[A](val self: A) extends AnyVal {
     def |>[B](f: A => B) = f(self)
@@ -116,8 +119,30 @@ object Saare {
     def fromBE: Long = if (le) bswap else self
   }
 
-  def dispose_![A, B](implicit ev: A => Disposable[_]): A => (A => B) => B = x => f => try f(x) finally x.dispose
+  def asDisposable[A: AsDisposable]: A => Disposable[_] = x => implicitly[AsDisposable[A]].asDisposable(x)
 
-  def disposing[A, B](implicit ev: A => Disposable[_], ec: ExecutionContext): A => (A => Future[B]) => Future[B] =
-    x => f => f(x) transform (y => { x.dispose; y }, e => { x.dispose; e })
+  def dispose[A: AsDisposable]: A => Unit = x => (x |> asDisposable).dispose
+
+  def using[A: AsDisposable, B](x: A)(f: A => B): B = try f(x) finally x |> dispose
+
+  def disposing[A: AsDisposable, B](x: A)(f: A => Future[B]): Future[B] = {
+    val fut = try f(x)
+    catch {
+      case e: Throwable => {
+        // f failed to return future
+        x |> dispose
+        throw e
+      }
+    }
+    fut transform (y => { x |> dispose; y }, e => { x |> dispose; e })
+  }
+
+  implicit def disposableIsDisposable[A](implicit ev: A => Disposable[_]) = new AsDisposable[A] {
+    def asDisposable(x: A) = x
+  }
+  implicit val autoClosableIsDisposable = new AsDisposable[AutoCloseable] {
+    def asDisposable(x: AutoCloseable) = new Disposable[AutoCloseable] {
+      def disposeInternal = x.close
+    }
+  }
 }

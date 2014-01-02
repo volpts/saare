@@ -27,13 +27,14 @@ class DisposableSpec extends WordSpec with Logging[DisposableSpec] {
       class A extends Disposable[A] {
         override def disposeInternal = a = true
       }
-      val f = new A |> disposing[A, Unit] |< {
+      val f = disposing(new A) {
         a =>
           future {
             // do something...
             ()
           }
       }
+      ((a: A) => Future {()}) |> disposing(new A)
       Await.result(f, Duration.Inf)
       assert(a === true)
     }
