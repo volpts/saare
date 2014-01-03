@@ -70,5 +70,5 @@ object Build extends Build {
 
   lazy val http = project configure common libs libraries.http dependsOn core
 
-  lazy val root = project in file(".") configure common libs libraries.common aggregate (`core-macros`, core, hashing, json, http) settings (publishArtifact := false)
+  lazy val root = project in file(".") configure common libs libraries.common aggregate (`core-macros`, core, hashing, json, http) settings(publishArtifact := false) settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
