@@ -30,6 +30,7 @@ object Build extends Build {
     organization := "info.sumito3478",
     scalaVersion := "2.11.0-M7",
     crossScalaVersions := Seq("2.10.3", "2.11.0-M7"),
+    crossVersion <<= scalaVersion { sv => if (sv contains "-" ) CrossVersion.full else CrossVersion.binary },
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
