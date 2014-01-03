@@ -18,6 +18,7 @@ import scala.reflect._
 import scala.language.experimental.macros
 import java.util.concurrent.atomic._
 import scala.concurrent._
+import java.util.{ concurrent => juc }
 
 trait Logging[Repr] {
   self =>
@@ -145,4 +146,16 @@ object Saare {
       def disposeInternal = x.close
     }
   }
+  def newDefaultThreadFactory[A: AsDisposable](disposable: Option[A] = None) = new juc.ThreadFactory {
+    def newThread(f: Runnable) = new Thread(f) {
+      setDaemon(true)
+      override def interrupt = {
+        for (disposable <- disposable)
+          disposable |> dispose
+        super.interrupt
+      }
+    }
+  }
+  def newDefaultExecutorService[A: AsDisposable](disposable: Option[A] = None) = juc.Executors.newCachedThreadPool(newDefaultThreadFactory(disposable))
+  implicit val ec = ExecutionContext.fromExecutorService(newDefaultExecutorService())
 }
