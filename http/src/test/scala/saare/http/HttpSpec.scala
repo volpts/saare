@@ -24,8 +24,12 @@ class HttpSpec extends WordSpec with Logging[HttpSpec] {
     "submit HTTP request" in {
       import saare._, Saare._
       import http._, Http._
+      import json._, Json._
+      import Json.CaseClassCodec
       val client = new Client()
-      val f = Request(url = "http://localhost:8529/_api/database/current", handler = new StringHandler) |> headers("test" -> "test") |> queries("test" -> "test") |> client.submit
+      case class DatabaseInfo(name: String, id: String, path: String, isSystem: Boolean)
+      case class DatabaseInfoResult(result: DatabaseInfo, error: Option[Boolean], code: Option[Int])
+      val f = Request(url = "http://localhost:8529/_api/database/current", handler = JsonHandler[DatabaseInfoResult]()) |> headers("test" -> "test") |> queries("test" -> "test") |> client.submit
       val r = Await.result(f, Duration.Inf)
       logger.info(r.toString)
     }
