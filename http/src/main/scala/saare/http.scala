@@ -44,6 +44,7 @@ import io.{ netty => netty4 }
 import netty4.buffer._
 
 import saare._, Saare._
+import saare.json._, Json._
 import Http._
 
 class Client(userAgent: Option[String] = None) extends Disposable[Client] {
@@ -89,9 +90,15 @@ object Headers {
 case class Content(content: ByteBuf) extends ResponsePart
 
 trait Handler[A, B] extends Logging[Handler[A, B]] {
+  self =>
   def init: A
   def handle: (A, ResponsePart) => Try[A]
   def completed: A => B
+  def andThen[C](f: B => C) = new Handler[A, C] {
+    def init = self.init
+    def handle = self.handle
+    def completed = self.completed.andThen(f)
+  }
 
   private[http] def toUnderlying = new AsyncHandler[B] {
     @volatile private[this] var acc: Try[A] = Success(init)
@@ -198,4 +205,5 @@ object Http {
   private[http] implicit class AHCFutureOps[A](self: ahc.ListenableFuture[A]) {
     def completed[U](f: Try[A] => U): Unit = self.addListener(new Runnable { def run = f(Try(self.get)) }, new juc.Executor { def execute(r: Runnable): Unit = ec.execute(r) })
   }
+  def JsonHandler[A: Decoder](forceCharset: Option[Charset] = None) = new StringHandler(forceCharset = forceCharset).andThen(str => decode[A]((str |> parse).get).get)
 }
