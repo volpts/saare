@@ -145,7 +145,7 @@ class StringHandler(forceCharset: Option[Charset] = None) extends Handler[(Optio
       val c = forceCharset.getOrElse(charset.getOrElse(Charset.forName("iso-8859-1")))
       Success((charset, buf += content.toString(c)))
   }
-  def completed = {
+  override def completed = {
     case (charset, buf) => buf.mkString
   }
 }
