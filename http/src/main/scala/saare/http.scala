@@ -15,12 +15,19 @@ limitations under the License.
 package saare
 package http
 
+import scala.language.existentials
+
 import java.util.{ concurrent => juc }
 import java.io._
+import java.nio.charset._
 
 import scala.concurrent._
 import scala.util._
 import scala.util.matching._
+import scala.util.control._
+import scala.util.control.Exception._
+import scala.collection._
+import scala.math._
 
 import com.ning.http.{ client => ahc, util => ahcUtil }
 import ahc._
@@ -70,58 +77,96 @@ trait RequestBody[A] {
 
 object EmptyRequestBody
 
-trait Handler[A] {
-  private[saare] def handler: AsyncHandler[A]
+sealed trait ResponsePart
+
+case class Status(code: Int, reason: String) extends ResponsePart
+case class Headers private (headers: Map[String, String]) extends ResponsePart
+object Headers {
+  def apply(xs: (String, String)*): Headers = Headers(immutable.TreeMap[String, String](xs: _*)(new Ordering[String] {
+    def compare(x: String, y: String) = x compareToIgnoreCase y
+  }))
 }
-object NullHandler extends Handler[Unit] {
-  def handler = new AsyncCompletionHandler[Unit] {
-    override def onCompleted(response: Response) = ()
-  }
-}
-object StringHandler extends Handler[String] {
-  def handler = new AsyncCompletionHandler[String] {
-    @volatile private[this] var charset = "UTF-8"
-    override def onHeadersReceived(headers: HttpResponseHeaders) = {
-      for {
-        contentType <- Option(headers.getHeaders.getFirstValue("Content-Type"))
-        charset <- Option(AsyncHttpProviderUtils.parseCharset(contentType))
-      } this.charset = charset
-      CONTINUE
+case class Content(content: ByteBuf) extends ResponsePart
+
+trait Handler[A, B] extends Logging[Handler[A, B]] {
+  def init: A
+  def handle: (A, ResponsePart) => Try[A]
+  def completed: A => B
+
+  private[http] def toUnderlying = new AsyncHandler[B] {
+    @volatile private[this] var acc: Try[A] = Success(init)
+    private[this] def state = if (acc.isSuccess) CONTINUE else ABORT
+    override def onThrowable(t: Throwable) = logger.error("Exception occurred while handling http response", t)
+    override def onStatusReceived(status: HttpResponseStatus) = {
+      acc = acc.flatMap(handle(_, Status(code = status.getStatusCode, reason = status.getStatusText)))
+      state
     }
-    override def onCompleted(response: Response): String = response.getResponseBody(charset)
-  }
-}
-class StringStreamHandler(f: Seq[String] => Boolean /* continue */ , delimiter: Regex) extends Handler[Unit] {
-  def handler = new AsyncHandler[Unit] {
-    @volatile private[this] var charset = "UTF-8"
-    @volatile private[this] var state = CONTINUE
-    @volatile private[this] var buf = ""
-    override def onThrowable(t: Throwable) = ()
-    override def onStatusReceived(status: HttpResponseStatus) = state
     override def onHeadersReceived(headers: HttpResponseHeaders) = {
-      for {
-        contentType <- Option(headers.getHeaders.getFirstValue("Content-Type"))
-        charset <- Option(AsyncHttpProviderUtils.parseCharset(contentType))
-      } this.charset = charset
+      import scala.collection.JavaConversions._
+      acc = acc.flatMap(handle(_, Headers(headers.getHeaders.iterator.toSeq.map(e => e.getKey -> e.getValue.head): _*)))
       state
     }
     override def onBodyPartReceived(bodyPart: HttpResponseBodyPart) = {
-      if (state == CONTINUE) {
-        val fragments = delimiter.split(buf + new String(bodyPart.getBodyPartBytes, charset))
-        val continue = f(fragments.take(fragments.length - 1))
-        if (!continue)
-          state = ABORT
-        buf = fragments.last
-      }
+      acc = acc.flatMap(handle(_, Content(content = Unpooled.wrappedBuffer(bodyPart.getBodyByteBuffer))))
       state
     }
     override def onCompleted() = {
-      f(Seq(buf))
+      acc match {
+        case Success(result) => completed(result)
+        case Failure(e) => throw e
+      }
     }
   }
 }
-class LineStreamHandler(f: Seq[String] => Boolean) extends StringStreamHandler(f, "[\n\r]+".r)
-case class Request[A, B: RequestBody](url: String, method: String = "GET", body: B = EmptyRequestBody, headers: Map[String, String] = Map(), queries: Map[String, String] = Map(), handler: Handler[A]) {
+object NullHandler extends Handler[Unit, Unit] {
+  override def init = ()
+  override def handle = { case ((), _) => Success(()) }
+  override def completed = _ => ()
+}
+class StringHandler(forceCharset: Option[Charset] = None) extends Handler[(Option[Charset], mutable.UnrolledBuffer[String]), String] {
+  override def init = (None, new mutable.UnrolledBuffer[String])
+  override def handle = {
+    case (acc, Status(_, _)) => Success(acc)
+    case ((charset, buf), Headers(headers)) =>
+      Success(for {
+        contentType <- headers.get("Content-Type")
+        charset <- Option(AsyncHttpProviderUtils.parseCharset(contentType))
+      } yield Charset.forName(charset), buf)
+    case ((charset, buf), Content(content)) =>
+      // Use iso-8859-1 by default to avoid data loss
+      // TODO: Use CharsetDetector of ICU4J to auto-detect charset
+      val c = forceCharset.getOrElse(charset.getOrElse(Charset.forName("iso-8859-1")))
+      Success((charset, buf += content.toString(c)))
+  }
+  def completed = {
+    case (charset, buf) => buf.mkString
+  }
+}
+class StringStreamHandler(f: Seq[String] => Unit, delimiter: Regex, forceCharset: Option[Charset] = None) extends Handler[(Option[Charset], String), Unit] {
+  override def init = (None, "")
+  override def handle = {
+    case (acc, Status(_, _)) => Success(acc)
+    case ((charset, buf), Headers(headers)) =>
+      Success(for {
+        contentType <- headers.get("Content-Type")
+        charset <- Option(AsyncHttpProviderUtils.parseCharset(contentType))
+      } yield Charset.forName(charset), buf)
+    case ((charset, buf), Content(content)) =>
+      // Use iso-8859-1 by default to avoid data loss
+      // TODO: Use CharsetDetector of ICU4J to auto-detect charset
+      val c = forceCharset.getOrElse(charset.getOrElse(Charset.forName("iso-8859-1")))
+      val fragments = delimiter.split(buf + content.toString(c))
+      allCatch.withTry(f(fragments.take(fragments.length - 1))).map(_ => (charset, fragments.last))
+  }
+  def completed = {
+    case (charset, buf) =>
+      if (!buf.isEmpty)
+        f(Seq(buf))
+      ()
+  }
+}
+class LineStreamHandler(f: Seq[String] => Unit, forceCharset: Option[Charset] = None) extends StringStreamHandler(f = f, delimiter = "[\n\r]+".r, forceCharset = forceCharset)
+case class Request[A, B: RequestBody](url: String, method: String = "GET", body: B = EmptyRequestBody, headers: Map[String, String] = Map(), queries: Map[String, String] = Map(), handler: Handler[_, A]) {
   private[http] def toUnderlying = {
     val builder = new RequestBuilder
     builder.setUrl(url)
@@ -131,7 +176,7 @@ case class Request[A, B: RequestBody](url: String, method: String = "GET", body:
     for ((k, v) <- queries) builder.addQueryParameter(k, v)
     builder.build
   }
-  private[http] def toAsyncHandler = handler.handler
+  private[http] def toAsyncHandler = handler.toUnderlying
 }
 object Http {
   implicit val emptyRequestBodyIsRequestBody = new RequestBody[EmptyRequestBody.type] {
