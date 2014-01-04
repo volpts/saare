@@ -34,7 +34,7 @@ class DisposableSpec extends WordSpec with Logging[DisposableSpec] {
             ()
           }
       }
-      ((a: A) => Future {()}) |> disposing(new A)
+      ((a: A) => Future { () }) |> disposing(new A)
       Await.result(f, Duration.Inf)
       assert(a === true)
     }
