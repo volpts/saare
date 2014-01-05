@@ -28,8 +28,8 @@ class HttpSpec extends WordSpec with Logging[HttpSpec] {
       import Json.CaseClassCodec
       val client = new Client()
       case class DatabaseInfo(name: String, id: String, path: String, isSystem: Boolean)
-      case class DatabaseInfoResult(result: DatabaseInfo, error: Option[Boolean], code: Option[Int])
-      val f = Request(url = "http://localhost:8529/_api/database/current", handler = JsonHandler[DatabaseInfoResult]()) |> headers("test" -> "test") |> queries("test" -> "test") |> client.submit
+      case class ArangoResult[A](result: A, error: Option[Boolean], code: Option[Int])
+      val f = Request(url = "http://localhost:8529/_api/database/current", handler = JsonHandler[ArangoResult[DatabaseInfo]]()) |> headers("test" -> "test") |> queries("test" -> "test") |> client.submit
       val r = Await.result(f, Duration.Inf)
       logger.info(r.toString)
     }
