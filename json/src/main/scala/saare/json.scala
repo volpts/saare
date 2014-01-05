@@ -38,7 +38,7 @@ case class JString(value: String) extends JValue
 case class JArray(value: Seq[JValue]) extends JValue
 case class JObject(value: Map[String, JValue]) extends JValue
 case object JNull extends JValue
-private[json] object JNothing extends JValue
+object JNothing extends JValue
 
 class Lens(private val get: JValue => Option[JValue], private val set: JValue => JValue => Option[JValue]) extends Dynamic {
   def selectDynamic(name: String) = {
