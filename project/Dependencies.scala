@@ -53,6 +53,15 @@ object Dependencies {
   object commons {
     val io = "commons-io" % "commons-io" % "2.4"
   }
+  object dispatch {
+    object constants {
+      val version = "0.11.0"
+      val name = "dispatch"
+      val group = "net.databinder.dispatch"
+    }
+    import constants._
+    val Seq(core) = Seq("core").map(a => group %% s"$name-$a" % version)
+  }
   object libraries {
     object constants {
       val test = "test"
@@ -64,6 +73,6 @@ object Dependencies {
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
-    val http = common ++ Seq(async_http_client)
+    val http = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
   }
 }
