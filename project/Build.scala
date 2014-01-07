@@ -47,7 +47,12 @@ object Build extends Build {
       "-target:jvm-1.7",
       "-deprecation",
       "-feature",
-      "-unchecked")) ++ scalariformSettings ++ fmppSettings
+      "-unchecked",
+      "-Xexperimental",
+      "-Xcheckinit",
+      "-Xdivergence211",
+      "-Xlint",
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
