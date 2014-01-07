@@ -73,6 +73,6 @@ object Dependencies {
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
-    val http = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
+    val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
   }
 }
