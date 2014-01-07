@@ -84,7 +84,7 @@ case class Status(code: Int, reason: String) extends ResponsePart
 case class Headers private (headers: Map[String, String]) extends ResponsePart
 object Headers {
   def apply(xs: (String, String)*): Headers = Headers(immutable.TreeMap[String, String](xs: _*)(new Ordering[String] {
-    def compare(x: String, y: String) = x compareToIgnoreCase y
+    def compare(x, y) = x compareToIgnoreCase y
   }))
 }
 case class Content(content: ByteBuf) extends ResponsePart
@@ -103,17 +103,17 @@ trait Handler[A, B] extends Logging[Handler[A, B]] {
   private[http] def toUnderlying = new AsyncHandler[B] {
     @volatile private[this] var acc: Try[A] = Success(init)
     private[this] def state = if (acc.isSuccess) CONTINUE else ABORT
-    override def onThrowable(t: Throwable) = logger.error("Exception occurred while handling http response", t)
-    override def onStatusReceived(status: HttpResponseStatus) = {
+    override def onThrowable(t) = logger.error("Exception occurred while handling http response", t)
+    override def onStatusReceived(status) = {
       acc = acc.flatMap(handle(_, Status(code = status.getStatusCode, reason = status.getStatusText)))
       state
     }
-    override def onHeadersReceived(headers: HttpResponseHeaders) = {
+    override def onHeadersReceived(headers) = {
       import scala.collection.JavaConversions._
       acc = acc.flatMap(handle(_, Headers(headers.getHeaders.iterator.toSeq.map(e => e.getKey -> e.getValue.head): _*)))
       state
     }
-    override def onBodyPartReceived(bodyPart: HttpResponseBodyPart) = {
+    override def onBodyPartReceived(bodyPart) = {
       acc = acc.flatMap(handle(_, Content(content = Unpooled.wrappedBuffer(bodyPart.getBodyByteBuffer))))
       state
     }

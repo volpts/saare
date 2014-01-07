@@ -142,12 +142,12 @@ object Saare {
     def asDisposable(x: A) = x
   }
   implicit val autoClosableIsDisposable = new AsDisposable[AutoCloseable] {
-    def asDisposable(x: AutoCloseable) = new Disposable[AutoCloseable] {
+    def asDisposable(x) = new Disposable[AutoCloseable] {
       def disposeInternal = x.close
     }
   }
   def newDefaultThreadFactory[A: AsDisposable](disposable: Option[A] = None) = new juc.ThreadFactory {
-    def newThread(f: Runnable) = new Thread(f) {
+    def newThread(f) = new Thread(f) {
       setDaemon(true)
       override def interrupt = {
         for (disposable <- disposable)
