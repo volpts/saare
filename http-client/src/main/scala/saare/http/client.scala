@@ -58,6 +58,7 @@ object Request {
   def PATCH: Verb = _.PATCH
   def TRACE: Verb = _.TRACE
   def OPTIONS: Verb = _.OPTIONS
+  def segment(x: String): Verb = _ / x
   def secure: Verb = _.secure
   def headers(xs: (String, String)*): Verb = _ <:< xs
   def params(xs: (String, String)*): Verb = _ << xs

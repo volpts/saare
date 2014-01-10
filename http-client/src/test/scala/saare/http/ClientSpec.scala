@@ -27,8 +27,8 @@ class ClientSpec extends WordSpec with Logging[ClientSpec] {
       import Request._
       val client = new Client
       import client._
-      val f = Request("http://localhost:8080/") |> GET |> headers("test" -> "test") |> secure |> queries("test" -> "test") |>
-        handler(Client.string)
+      val f = Request("http://localhost:8080/") |> segment("test") |> GET |> headers("test" -> "test") |> secure |>
+        queries("test" -> "test") |> handler(Client.string)
       for (str <- f)
         println(str)
     }
