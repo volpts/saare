@@ -80,7 +80,7 @@ class Client(userAgent: Option[String] = None) extends Disposable[Client] {
           builder.setUserAgent(userAgent)
         builder
     }
-  def disposeInternal = underlying.shutdown
+  def disposeInternal() = underlying.shutdown
   def handler[A](handler: Handler[A]): Request => Future[A] =
     x => handler.underlying match {
       case Left(handler) => underlying(x.underlying > handler)

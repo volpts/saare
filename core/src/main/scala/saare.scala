@@ -35,11 +35,11 @@ trait Logging[Repr] {
   }
 }
 trait Disposable[Repr] extends Logging[Repr] {
-  def disposeInternal: Unit
+  def disposeInternal(): Unit
 
   private[this] val disposed = new AtomicBoolean(false)
 
-  def dispose = if (disposed.compareAndSet(false, true)) disposeInternal
+  def dispose() = if (disposed.compareAndSet(false, true)) disposeInternal()
 
   def disposeAsync(implicit ec: ExecutionContext): Option[Future[Unit]] =
     if (disposed.compareAndSet(false, true))
@@ -48,10 +48,10 @@ trait Disposable[Repr] extends Logging[Repr] {
       })
     else None
 
-  override def finalize =
+  override def finalize() =
     if (!disposed.get) {
       logger.warn(s"$this - calling dispose from finalizer!")
-      dispose
+      dispose()
     }
 }
 trait AsDisposable[A] {
