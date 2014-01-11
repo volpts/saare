@@ -16,6 +16,12 @@ import sbt._
 import Keys._
 
 object Build extends Build {
+  // suppress debug messages from bintray-sbt (actually async-http-client)
+  import org.slf4j.LoggerFactory
+  import ch.qos.logback.classic.Level
+  import ch.qos.logback.classic.Logger
+  LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.INFO)
+
   import scalariform.formatter.preferences._
   import com.typesafe.sbt.SbtScalariform
   lazy val scalariformSettings = SbtScalariform.scalariformSettings ++ Seq(
@@ -23,6 +29,9 @@ object Build extends Build {
       .setPreference(DoubleIndentClassDeclaration, true))
 
   import fmpp.FmppPlugin._
+
+  lazy val bintraySettings = bintray.Plugin.bintraySettings ++ Seq(
+    bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("volpts"))
 
   lazy val commonSettings = Seq(
     version := "0.0.1-SNAPSHOT",
@@ -35,13 +44,7 @@ object Build extends Build {
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0-M1" cross CrossVersion.full),
-    pomExtra := (
-      <licenses>
-        <name>The Apache Software License, Version 2.0</name>
-        <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
-        <distribution>repo</distribution>
-      </licenses>
-      ),
+    licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
     scalacOptions ++= Seq(
       "-encoding", "utf-8",
       "-target:jvm-1.7",
@@ -52,7 +55,7 @@ object Build extends Build {
       "-Xcheckinit",
       "-Xdivergence211",
       "-Xlint",
-      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ bintraySettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
@@ -75,5 +78,8 @@ object Build extends Build {
 
   lazy val `http-client` = project configure common libs libraries.`http-client` dependsOn (core, json)
 
-  lazy val root = project in file(".") configure common libs libraries.common aggregate (`core-macros`, core, hashing, json, `http-client`) settings(publishArtifact := false) settings(sbtunidoc.Plugin.unidocSettings: _*)
+  lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
+    .aggregate(`core-macros`, core, hashing, json, `http-client`)
+    .settings(publishArtifact := false)
+    .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }

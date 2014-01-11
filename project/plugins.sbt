@@ -12,6 +12,12 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-license-report" % "0.1")
 
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.0")
 
-lazy val fmppPlugin = uri("git://github.com/sumito3478/sbt-fmpp.git#outdir-fix")
+resolvers += Resolver.url("bintray-sbt-plugin-releases", url("http://dl.bintray.com/content/sbt/sbt-plugin-releases"))(Resolver.ivyStylePatterns)
+
+addSbtPlugin("me.lessis" % "bintray-sbt" % "0.1.1")
+
+libraryDependencies += "ch.qos.logback" % "logback-classic" % "1.0.13"
+
+lazy val fmppPlugin = uri("git://github.com/sumito3478/sbt-fmpp.git#priv")
 
 lazy val root = project in file(".") dependsOn fmppPlugin
