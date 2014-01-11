@@ -34,7 +34,7 @@ object Build extends Build {
     bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("volpts"))
 
   lazy val commonSettings = Seq(
-    version := "0.0.1-SNAPSHOT",
+    version := "0.0.1",
     javaOptions := Seq("-Xms1024m"),
     organization := "info.sumito3478",
     scalaVersion := "2.10.3",
