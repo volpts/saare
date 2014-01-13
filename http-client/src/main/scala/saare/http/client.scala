@@ -18,9 +18,12 @@ package client
 
 import scala.language.implicitConversions
 
+import scala.collection._
 import scala.concurrent._
 
 import com.ning.http.{ client => ahc }
+
+import io.netty.buffer._
 
 import saare._, Saare._
 import saare.json._, Json._
@@ -79,6 +82,34 @@ object Handler {
   private[this] implicit def function2handler[A](f: ahc.Response => A) = new Handler[A] { def underlying = Left(f) }
   val string: Handler[String] = dispatch.as.String
   def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
+}
+case class Status(code: Int, text: String)
+case class CallbackHandler[A, B](init: () => A, status: (A, Status) => A, headers: (A, Map[String, String]) => A, body: (A, ByteBuf) => A, completion: A => B) extends Handler[B] {
+  override def underlying = Right(new ahc.AsyncHandler[B] {
+    import ahc.AsyncHandler.STATE._
+    @volatile
+    private[this] var state = init()
+    override def onThrowable(t) = ()
+    override def onStatusReceived(responseStatus) = {
+      state = status(state, Status(code = responseStatus.getStatusCode, text = responseStatus.getStatusText))
+      CONTINUE
+    }
+    override def onHeadersReceived(responseHeaders) = {
+      import scala.collection.JavaConversions._
+      // - should multiple values for a single key be supported?
+      // - case insensitive Ordering[String] should be exist in saare-core or in a new module saare-collection
+      val hs = immutable.TreeMap[String, String](responseHeaders.getHeaders.mapValues(_.head).toSeq: _*)(new Ordering[String] {
+        def compare(a, b) = a compareToIgnoreCase b
+      })
+      state = headers(state, hs)
+      CONTINUE
+    }
+    override def onBodyPartReceived(bodyPart) = {
+      state = body(state, Unpooled.wrappedBuffer(bodyPart.getBodyByteBuffer))
+      CONTINUE
+    }
+    override def onCompleted = completion(state)
+  })
 }
 class Client(userAgent: Option[String] = None) extends Disposable[Client] {
   private[this] val underlying =
