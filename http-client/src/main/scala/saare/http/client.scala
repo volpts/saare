@@ -67,6 +67,7 @@ object Request {
   def queries(xs: (String, String)*): Verb = _ <<? xs
   def followRedirects(x: Boolean): Verb = _ setFollowRedirects x
   def proxy(x: ProxyServer): Verb = _ setProxyServer x.toUnderlying
+  def basicAuth(x: Credential): Verb = _ as_! (x.user, x.password)
 
   def apply(url: String) = new Request(dispatch.url(url))
 }
