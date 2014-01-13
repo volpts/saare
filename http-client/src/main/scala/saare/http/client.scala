@@ -74,6 +74,12 @@ object Request {
 trait Handler[A] {
   private[client] def underlying: Either[ahc.Response => A, ahc.AsyncHandler[A]]
 }
+object Handler {
+  private[this] implicit def asyncHandler2handler[A](asyncHandler: ahc.AsyncHandler[A]) = new Handler[A] { def underlying = Right(asyncHandler) }
+  private[this] implicit def function2handler[A](f: ahc.Response => A) = new Handler[A] { def underlying = Left(f) }
+  val string: Handler[String] = dispatch.as.String
+  def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
+}
 class Client(userAgent: Option[String] = None) extends Disposable[Client] {
   private[this] val underlying =
     dispatch.Http.configure {
@@ -88,10 +94,4 @@ class Client(userAgent: Option[String] = None) extends Disposable[Client] {
       case Left(handler) => underlying(x.underlying > handler)
       case Right(handler) => underlying(x.underlying > handler)
     }
-}
-object Client {
-  private[this] implicit def asyncHandler2handler[A](asyncHandler: ahc.AsyncHandler[A]) = new Handler[A] { def underlying = Right(asyncHandler) }
-  private[this] implicit def function2handler[A](f: ahc.Response => A) = new Handler[A] { def underlying = Left(f) }
-  val string: Handler[String] = dispatch.as.String
-  def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
 }
