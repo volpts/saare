@@ -84,11 +84,16 @@ object Handler {
   def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
 }
 case class Status(code: Int, text: String)
-case class CallbackHandler[A, B](init: () => A, status: (A, Status) => A, headers: (A, Map[String, String]) => A, body: (A, ByteBuf) => A, completion: A => B) extends Handler[B] {
+trait CallbackHandler[A, B] extends Handler[B] {
+  def init: A
+  def status: (A, Status) => A
+  def headers: (A, Map[String, String]) => A
+  def body: (A, ByteBuf) => A
+  def completion: A => B
   override def underlying = Right(new ahc.AsyncHandler[B] {
     import ahc.AsyncHandler.STATE._
     @volatile
-    private[this] var state = init()
+    private[this] var state = init
     override def onThrowable(t) = ()
     override def onStatusReceived(responseStatus) = {
       state = status(state, Status(code = responseStatus.getStatusCode, text = responseStatus.getStatusText))
