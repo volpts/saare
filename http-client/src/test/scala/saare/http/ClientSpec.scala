@@ -19,16 +19,16 @@ package client
 import org.scalatest._
 
 import saare._, Saare._
-import saare.http.client._, Client._
+import saare.http.client._
 
 class ClientSpec extends WordSpec with Logging[ClientSpec] {
   "saare.http.client.Client" should {
     "submit http request" in {
-      import Request._
       val client = new Client
       import client._
+      import Request._
       val f = Request("http://localhost:8080/") |> segment("test") |> GET |> headers("test" -> "test") |> secure |>
-        queries("test" -> "test") |> handler(Handler.string)
+        queries("test" -> "test") |> Handler.string
       for (str <- f)
         println(str)
     }

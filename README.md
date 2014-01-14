@@ -104,11 +104,14 @@ encode(Test2(Test(100, None, None), Seq(100, 200, 300), 10.5, Map("test5" -> 100
 
 ```scala
 import saare._, Saare._
-import saare.http.client._, Client._
-val client = new Client()
-// GET https://localhost:8080/some/path?test=test with header "test: test"
-val f = Request("http://localhost:8080/some/") |> segment("path") |> GET |> headers("test" -> "test") |> secure |>
-  queries("test" -> "test") |> handler(Handler.string)
+import saare.http.client.Client
+val client = new Client
+import client._
+import Request._
+// GET https://localhost:8080/some/path?test=test with header "Test: test"
+val f = Request("http://localhost:8080/") |> segment("test") |> GET |>
+  headers("Test" -> "test") |> secure |> queries("test" -> "test") |>
+  Handler.string
 Await.result(f, Duration.Inf) // => response as string
 ```
 
