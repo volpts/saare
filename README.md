@@ -1,14 +1,13 @@
 # The Saare Library
 
 Saare is yet another collection of Scala Libraries.
-Early development.
+*Early development.*
 
 # Dependencies
 JDK 7 (and hopefully future versions of JDK).
 Other dependencies are handled by sbt.
 
-Currently Saare only supports Scala 2.10.3, with
-experimental support for Scala 2.11.0-RC7.
+Currently Saare only supports Scala 2.10.3.
 Back porting to 2.9.x is not planned.
 
 Tested on `Arch Linux x86\_64` and `OpenJDK 1.7.0_45`.
@@ -105,7 +104,7 @@ encode(Test2(Test(100, None, None), Seq(100, 200, 300), 10.5, Map("test5" -> 100
 
 ```scala
 import saare._, Saare._
-import http._, Http._
+import saare.http.client._, Client._
 val client = new Client()
 // GET https://localhost:8080/some/path?test=test with header "test: test"
 val f = Request("http://localhost:8080/some/") |> segment("path") |> GET |> headers("test" -> "test") |> secure |>
