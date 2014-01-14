@@ -33,6 +33,14 @@ object Build extends Build {
   lazy val bintraySettings = bintray.Plugin.bintraySettings ++ Seq(
     bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("volpts"))
 
+  lazy val releaseSettings = {
+    import sbtrelease.ReleasePlugin.ReleaseKeys._
+    sbtrelease.ReleasePlugin.releaseSettings ++ Seq(
+      crossBuild := true,
+      tagComment <<= (version in ThisBuild) map (v => s"Release $v"),
+      commitMessage <<= (version in ThisBuild) map (v => s"Bump version number to $v"))
+  }
+
   lazy val commonSettings = Seq(
     javaOptions := Seq("-Xms1024m"),
     organization := "info.volpts",
@@ -54,7 +62,7 @@ object Build extends Build {
       "-Xcheckinit",
       "-Xdivergence211",
       "-Xlint",
-      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ bintraySettings
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ bintraySettings ++ releaseSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
