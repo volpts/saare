@@ -107,7 +107,9 @@ encode(Test2(Test(100, None, None), Seq(100, 200, 300), 10.5, Map("test5" -> 100
 import saare._, Saare._
 import http._, Http._
 val client = new Client()
-val f = Request(url = "http://localhost:8080/some/path/", handler = StringHandler) |> headers("test" -> "test") |> queries("test" -> "test") |> client.submit
+// GET https://localhost:8080/some/path?test=test with header "test: test"
+val f = Request("http://localhost:8080/some/") |> segment("path") |> GET |> headers("test" -> "test") |> secure |>
+  queries("test" -> "test") |> handler(Handler.string)
 Await.result(f, Duration.Inf) // => response as string
 ```
 
