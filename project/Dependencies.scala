@@ -62,13 +62,22 @@ object Dependencies {
     import constants._
     val Seq(core) = Seq("core").map(a => group %% s"$name-$a" % version)
   }
+  object akka {
+    object constants {
+      val version = "2.2.3"
+      val name = "akka"
+      val group = "com.typesafe.akka"
+    }
+    import constants._
+    val Seq(actor) = Seq("actor").map(a => group %% s"$name-$a" % version)
+  }
   object libraries {
     object constants {
       val test = "test"
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j, commons.io, scalatest % test, logback % test)
+    val common = Seq(slf4j, commons.io, akka.actor, scalatest % test, logback % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)

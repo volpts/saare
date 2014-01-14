@@ -25,6 +25,8 @@ import com.ning.http.{ client => ahc }
 
 import io.netty.buffer._
 
+import akka.util.ByteString
+
 import saare._, Saare._
 import saare.json._, Json._
 
@@ -82,6 +84,13 @@ object Handler {
   private[this] implicit def function2handler[A](f: ahc.Response => A) = new Handler[A] { def underlying = Left(f) }
   val string: Handler[String] = dispatch.as.String
   def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
+  val byteString: Handler[ByteString] = new CallbackHandler[ByteString, ByteString] {
+    def init = ByteString.empty
+    def status = (buf, status) => buf
+    def headers = (buf, hs) => buf
+    def body = (buf, bytebuf) => buf ++ ByteString(bytebuf.nioBuffer)
+    def completion = buf => buf
+  }
 }
 case class Status(code: Int, text: String)
 trait CallbackHandler[A, B] extends Handler[B] {
