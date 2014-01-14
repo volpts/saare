@@ -35,7 +35,7 @@ object Build extends Build {
 
   lazy val commonSettings = Seq(
     javaOptions := Seq("-Xms1024m"),
-    organization := "info.sumito3478",
+    organization := "info.volpts",
     scalaVersion := "2.10.3",
     crossScalaVersions := Seq("2.10.3"),
     crossVersion <<= scalaVersion { sv => if (sv contains "-" ) CrossVersion.full else CrossVersion.binary },
