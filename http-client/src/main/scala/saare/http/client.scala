@@ -106,6 +106,7 @@ class Client(userAgent: Option[String] = None) extends Disposable[Client] {
       def body = (buf, bytebuf) => buf ++ ByteString(bytebuf.nioBuffer)
       def completion = buf => buf
     }
+    def json[A: Codec]: Handle[Option[A]] = string andThen (f => for (s <- f) yield (s |> parse).get |> decode[A])
   }
   case class Status(code: Int, text: String)
   trait CallbackHandler[A, B] extends Handler[B] {
