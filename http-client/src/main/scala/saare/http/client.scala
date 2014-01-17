@@ -86,7 +86,8 @@ class Client(userAgent: Option[String] = None) extends Disposable[Client] {
 
     def apply(url: String) = new Request(dispatch.url(url))
   }
-  trait Handler[A] extends (Request => Future[A]) {
+  type Handle[A] = Request => Future[A]
+  trait Handler[A] extends Handle[A] {
     private[client] def underlying: Either[ahc.Response => A, ahc.AsyncHandler[A]]
     override def apply(x) = underlying match {
       case Left(handler) => client.underlying(x.underlying > handler)
@@ -94,11 +95,11 @@ class Client(userAgent: Option[String] = None) extends Disposable[Client] {
     }
   }
   object Handler {
-    private[this] implicit def asyncHandler2handler[A](asyncHandler: ahc.AsyncHandler[A]) = new Handler[A] { def underlying = Right(asyncHandler) }
-    private[this] implicit def function2handler[A](f: ahc.Response => A) = new Handler[A] { def underlying = Left(f) }
-    val string: Handler[String] = dispatch.as.String
-    def file(x: java.io.File): Handler[_] = asyncHandler2handler(dispatch.as.File(x))
-    val byteString: Handler[ByteString] = new CallbackHandler[ByteString, ByteString] {
+    private[this] implicit def asyncHandler2handler[A](asyncHandler: ahc.AsyncHandler[A]): Handle[A] = new Handler[A] { def underlying = Right(asyncHandler) }
+    private[this] implicit def function2handler[A](f: ahc.Response => A): Handle[A] = new Handler[A] { def underlying = Left(f) }
+    val string: Handle[String] = dispatch.as.String
+    def file(x: java.io.File): Handle[_] = asyncHandler2handler(dispatch.as.File(x))
+    val byteString: Handle[ByteString] = new CallbackHandler[ByteString, ByteString] {
       def init = ByteString.empty
       def status = (buf, status) => buf
       def headers = (buf, hs) => buf
