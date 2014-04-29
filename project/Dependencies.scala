@@ -73,6 +73,15 @@ object Dependencies {
     import constants._
     val Seq(actor) = Seq("actor").map(a => group %% s"$name-$a" % version)
   }
+  object twitter4j {
+    object constants {
+      val version = "4.0.1"
+      val name = "twitter4j"
+      val group = "org.twitter4j"
+    }
+    import constants._
+    val Seq(core, stream, async) = Seq("core", "stream", "async").map(a => group % s"$name-$a" % version)
+  }
   object libraries {
     object constants {
       val test = "test"
@@ -85,5 +94,6 @@ object Dependencies {
     val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
     val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
+    val `web-twitter` = common ++ Seq(twitter4j.core, twitter4j.stream, twitter4j.async)
   }
 }

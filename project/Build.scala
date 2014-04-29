@@ -72,8 +72,10 @@ object Build extends Build {
 
   lazy val `http-client` = project configure common libs libraries.`http-client` dependsOn (core, json)
 
+  lazy val `web-twitter` = project configure common libs libraries.`web-twitter` dependsOn(core)
+
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`core-macros`, core, hashing, json, `http-client`)
+    .aggregate(`core-macros`, core, hashing, json, `http-client`, `web-twitter`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
