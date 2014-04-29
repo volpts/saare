@@ -16,12 +16,6 @@ import sbt._
 import Keys._
 
 object Build extends Build {
-  // suppress debug messages from bintray-sbt (actually async-http-client)
-  import org.slf4j.LoggerFactory
-  import ch.qos.logback.classic.Level
-  import ch.qos.logback.classic.Logger
-  LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME).asInstanceOf[Logger].setLevel(Level.INFO)
-
   import scalariform.formatter.preferences._
   import com.typesafe.sbt.SbtScalariform
   lazy val scalariformSettings = SbtScalariform.scalariformSettings ++ Seq(
@@ -29,9 +23,6 @@ object Build extends Build {
       .setPreference(DoubleIndentClassDeclaration, true))
 
   import fmpp.FmppPlugin._
-
-  lazy val bintraySettings = bintray.Plugin.bintraySettings ++ Seq(
-    bintray.Keys.bintrayOrganization in bintray.Keys.bintray := Some("volpts"))
 
   lazy val releaseSettings = {
     import sbtrelease.ReleasePlugin.ReleaseKeys._
@@ -58,7 +49,7 @@ object Build extends Build {
       "-Xexperimental",
       "-Xcheckinit",
       "-Xlint",
-      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ bintraySettings ++ releaseSettings
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ releaseSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
