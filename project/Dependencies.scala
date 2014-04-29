@@ -16,19 +16,19 @@ import sbt._
 import Keys._
 
 object Dependencies {
-  val logback = "ch.qos.logback" % "logback-classic" % "1.0.13"
+  val logback = "ch.qos.logback" % "logback-classic" % "1.1.2"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.0+" // we need 2.0.1-SNAP<n> for Scala 2.11.0
+  val scalatest = "org.scalatest" %% "scalatest" % "2.1.5"
 
-  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.5"
+  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.7"
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
-  val async_http_client = "com.ning" % "async-http-client" % "1.7.23"
+  val async_http_client = "com.ning" % "async-http-client" % "1.8.8"
 
   object netty {
     object constants {
-      val version = "4.0.14.Final"
+      val version = "4.0.18.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -37,7 +37,7 @@ object Dependencies {
   }
   object jackson {
     object constants {
-      val version = "2.3.1"
+      val version = "2.3.3"
       val name = "jackson"
       object group {
         val prefix = s"com.fasterxml.$name"
@@ -64,7 +64,7 @@ object Dependencies {
   }
   object akka {
     object constants {
-      val version = "2.2.3"
+      val version = "2.3.2"
       val name = "akka"
       val group = "com.typesafe.akka"
     }

@@ -44,13 +44,10 @@ object Build extends Build {
   lazy val commonSettings = Seq(
     javaOptions := Seq("-Xms1024m"),
     organization := "info.volpts",
-    scalaVersion := "2.10.3",
-    crossScalaVersions := Seq("2.10.3"),
-    crossVersion <<= scalaVersion { sv => if (sv contains "-" ) CrossVersion.full else CrossVersion.binary },
+    scalaVersion := "2.11.0",
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0-M1" cross CrossVersion.full),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
     scalacOptions ++= Seq(
       "-encoding", "utf-8",
@@ -60,7 +57,6 @@ object Build extends Build {
       "-unchecked",
       "-Xexperimental",
       "-Xcheckinit",
-      "-Xdivergence211",
       "-Xlint",
       "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ bintraySettings ++ releaseSettings
 
