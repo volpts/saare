@@ -15,20 +15,20 @@ limitations under the License.
 package saare
 
 import scala.language.experimental.macros
-import scala.reflect.macros.Context
+import scala.reflect.macros._
 
 object Macros {
   trait TypeNameable[A] {
     def fullName: String
     def name: String
   }
-  def materializeTypeNameableImpl[A: c.WeakTypeTag](c: Context): c.Expr[Macros.TypeNameable[A]] = {
+  def materializeTypeNameableImpl[A: c.WeakTypeTag](c: blackbox.Context): c.Expr[Macros.TypeNameable[A]] = {
     import c.universe._
     val a = weakTypeOf[A]
     val typeNameable = weakTypeOf[TypeNameable[A]]
-    c.Expr[Macros.TypeNameable[A]](q"new $typeNameable { def fullName = ${a.typeSymbol.fullName} ; def name = ${a.typeSymbol.name.decoded} }")
+    c.Expr[Macros.TypeNameable[A]](q"new $typeNameable { def fullName = ${a.typeSymbol.fullName} ; def name = ${a.typeSymbol.name.decodedName.toString} }")
   }
-  implicit def materializeTypeNameable[A] = macro materializeTypeNameableImpl[A]
+  implicit def materializeTypeNameable[A]: Macros.TypeNameable[A] = macro materializeTypeNameableImpl[A]
 
   trait Logger {
     val underlying: org.slf4j.Logger
@@ -44,7 +44,7 @@ object Macros {
     def trace(msg: String, e: Throwable): Unit = macro Macros.Logger.traceThrowableImpl
   }
   object Logger {
-    type Context = scala.reflect.macros.Context {
+    type Context = blackbox.Context {
       type PrefixType = Logger
     }
     def errorImpl(c: Context)(msg: c.Expr[String]): c.Expr[Unit] = {

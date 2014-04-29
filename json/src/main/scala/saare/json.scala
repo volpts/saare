@@ -19,7 +19,7 @@ import scala.language.dynamics
 import scala.util._
 import scala.reflect._
 import scala.language.experimental.macros
-import scala.reflect.macros.Context
+import scala.reflect.macros._
 import scala.util.control._
 import scala.util.control.Exception._
 import saare._, Saare._
@@ -122,7 +122,7 @@ object Json {
     }
     Codec[Map[String, A]](encode = x => JObject(x.mapValues(encode(_))), decode = d)
   }
-  def CaseClassCodecImpl[A: c.WeakTypeTag](c: Context): c.Expr[json.Codec[A]] = {
+  def CaseClassCodecImpl[A: c.WeakTypeTag](c: blackbox.Context): c.Expr[json.Codec[A]] = {
     import c.universe._
     val aType = weakTypeOf[A]
     val typeParams = aType.typeSymbol.asClass.typeParams
@@ -130,16 +130,16 @@ object Json {
     val typeName = aType.typeSymbol
     val companion = {
       def f: c.Tree = {
-        val symbol = aType.typeSymbol.companionSymbol.orElse {
-          // due to SI-7567, if A is a inner class, companionSymbol returns NoSymbol...
-          // as I don't know how to avoid SI-7567, let's fall back into a anaphoric macro!
-          return c.parse(typeName.name.decoded)
+        val symbol = aType.typeSymbol.companion.orElse {
+          // due to SI-7567, if A is a inner class, companion returns NoSymbol...
+          // as I don't know how to avoid SI-7567, let's fall back into an anaphoric macro!
+          return c.parse(typeName.name.decodedName.toString)
         }
         q"$symbol"
       }
       f
     }
-    val params = aType.declarations.collect { case m: MethodSymbol if m.isCaseAccessor => m }.toList
+    val params = aType.decls.collect { case m: MethodSymbol if m.isCaseAccessor => m }.toList
     val returnTypes = for (param <- params) yield {
       val returnType = param.returnType
       // if the return type is one of case class type parameter, replace with the actual type
@@ -151,14 +151,14 @@ object Json {
     val unapplyParams =
       for (i <- 0 until params.size) yield {
         val param = params(i)
-        val e = c.parse(s"_root_.saare.json.Json.encode(x.${param.name.decoded})") // I don't understand why use of quasiquote here doen't work...
-        q"""(${param.name.decoded}, $e)"""
+        val e = c.parse(s"_root_.saare.json.Json.encode(x.${param.name.decodedName.toString})") // I don't understand why use of quasiquote here doen't work...
+        q"""(${param.name.decodedName.toString}, $e)"""
       }
     val unapply = q"Map(..$unapplyParams).filterNot { case (_, v) => v == JNothing }"
     val applyParams = for (i <- 0 until params.size) yield {
       val param = params(i)
       val returnType = returnTypes(i)
-      q"""_root_.saare.json.Json.decode[$returnType](xs.getOrElse(${param.name.decoded}, JNothing)).get"""
+      q"""_root_.saare.json.Json.decode[$returnType](xs.getOrElse(${param.name.decodedName.toString}, JNothing)).get"""
     }
     val apply = q"$companion(..$applyParams)"
     val src = q"""
