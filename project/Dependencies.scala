@@ -26,6 +26,8 @@ object Dependencies {
 
   val async_http_client = "com.ning" % "async-http-client" % "1.8.8"
 
+  val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
+
   object netty {
     object constants {
       val version = "4.0.18.Final"
@@ -77,7 +79,7 @@ object Dependencies {
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j, commons.io, akka.actor, scalatest % test, logback % test)
+    val common = Seq(slf4j, commons.io, akka.actor, shapeless, scalatest % test, logback % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
