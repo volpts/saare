@@ -4,13 +4,11 @@ Saare is yet another collection of Scala Libraries.
 *Early development.*
 
 # Dependencies
-JDK 7 (and hopefully future versions of JDK).
+JDK 7 or 8 (or hopefully future versions of JDK).
 Other dependencies are handled by sbt.
 
-Currently Saare only supports Scala 2.10.3.
-Back porting to 2.9.x is not planned.
-
-Tested on `Arch Linux x86\_64` and `OpenJDK 1.7.0_45`.
+Currently Saare only supports Scala 2.11.0.
+Back porting to older versions is not planned.
 
 # How ot use the Saare Library
 
