@@ -20,14 +20,29 @@ object Dependencies {
 
   val scalatest = "org.scalatest" %% "scalatest" % "2.1.5"
 
-  val slf4j = "org.slf4j" % "slf4j-api" % "1.7.7"
-
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
   val async_http_client = "com.ning" % "async-http-client" % "1.8.8"
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
 
+  val hsqldb = "org.hsqldb" % "hsqldb" % "2.3.2"
+
+  object slf4j {
+    object constants {
+      val version = "1.7.7"
+      val name = "slf4j"
+      val group = "org.slf4j"
+    }
+    import constants._
+    val api = group % s"$name-api" % version
+    object over {
+      val Seq(jcl, log4j) = Seq("jcl", "log4j").map(a => group % s"$a-over-$name" % version)
+    }
+    object to {
+      val jul = group % s"jul-to-$name" % version
+    }
+  }
   object netty {
     object constants {
       val version = "4.0.18.Final"
@@ -88,7 +103,7 @@ object Dependencies {
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j, commons.io, akka.actor, shapeless, scalatest % test, logback % test)
+    val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val hashing = common ++ Seq(lz4 % test)
