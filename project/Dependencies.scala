@@ -110,5 +110,6 @@ object Dependencies {
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
     val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
     val `web-twitter` = common ++ Seq(twitter4j.core, twitter4j.stream, twitter4j.async)
+    val `datastore-hsqldb` = common ++ Seq(hsqldb)
   }
 }
