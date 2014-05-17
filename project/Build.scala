@@ -40,6 +40,7 @@ object Build extends Build {
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
     licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+    incOptions := incOptions.value.withNameHashing(true),
     scalacOptions ++= Seq(
       "-encoding", "utf-8",
       "-target:jvm-1.7",
