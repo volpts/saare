@@ -13,7 +13,3 @@ addSbtPlugin("com.typesafe.sbt" % "sbt-license-report" % "0.1")
 addSbtPlugin("com.eed3si9n" % "sbt-unidoc" % "0.3.0")
 
 addSbtPlugin("com.github.gseitz" % "sbt-release" % "0.8")
-
-lazy val fmppPlugin = uri("git://github.com/sumito3478/sbt-fmpp.git#priv")
-
-lazy val root = project in file(".") dependsOn fmppPlugin

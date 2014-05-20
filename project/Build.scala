@@ -22,8 +22,6 @@ object Build extends Build {
     SbtScalariform.ScalariformKeys.preferences := FormattingPreferences()
       .setPreference(DoubleIndentClassDeclaration, true))
 
-  import fmpp.FmppPlugin._
-
   lazy val releaseSettings = {
     import sbtrelease.ReleasePlugin.ReleaseKeys._
     sbtrelease.ReleasePlugin.releaseSettings ++ Seq(
@@ -50,12 +48,11 @@ object Build extends Build {
       "-Xexperimental",
       "-Xcheckinit",
       "-Xlint",
-      "-Yinfer-argument-types")) ++ scalariformSettings ++ fmppSettings ++ releaseSettings
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ releaseSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
       .settings(commonSettings: _*)
-      .configs(Fmpp)
 
   implicit class ProjectW(val self: Project) extends AnyVal {
     def libs(xs: Seq[ModuleID]) = self.settings(libraryDependencies ++= xs)
