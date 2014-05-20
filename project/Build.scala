@@ -31,6 +31,12 @@ object Build extends Build {
   }
 
   lazy val commonSettings = Seq(
+    scalaSource in Compile := baseDirectory.value / "src",
+    scalaSource in Test := baseDirectory.value / "test",
+    javaSource in Compile := baseDirectory.value / "src",
+    javaSource in Test := baseDirectory.value / "test",
+    resourceDirectory in Compile := baseDirectory.value / "res",
+    resourceDirectory in Test := baseDirectory.value / "res-test",
     javaOptions := Seq("-Xms1024m"),
     organization := "info.volpts",
     scalaVersion := "2.11.0",
