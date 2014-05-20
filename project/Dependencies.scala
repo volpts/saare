@@ -69,6 +69,12 @@ object Dependencies {
   }
   object commons {
     val io = "commons-io" % "commons-io" % "2.4"
+    object constants {
+      val name = "commons"
+      val group = "org.apache.commons"
+    }
+    import constants._
+    val Seq(collections) = Seq(("collections4", "4.0")).map { case (a, v) => group % s"$name-$a" % v }
   }
   object dispatch {
     object constants {
@@ -106,6 +112,7 @@ object Dependencies {
     val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
+    val collection = common ++ Seq(commons.collections)
     val hashing = common ++ Seq(lz4 % test)
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
     val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)

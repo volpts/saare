@@ -72,6 +72,8 @@ object Build extends Build {
 
   lazy val hashing = project configure common libs libraries.hashing dependsOn core
 
+  lazy val collection = project configure common libs libraries.collection dependsOn core
+
   lazy val json = project configure common libs libraries.json dependsOn core
 
   lazy val `http-client` = project configure common libs libraries.`http-client` dependsOn (core, json)
