@@ -28,6 +28,8 @@ object Dependencies {
 
   val hsqldb = "org.hsqldb" % "hsqldb" % "2.3.2"
 
+  val guava = "com.google.guava" % "guava" % "17.0"
+
   object slf4j {
     object constants {
       val version = "1.7.7"
@@ -109,7 +111,7 @@ object Dependencies {
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test)
+    val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, guava, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test)
     val macros = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val collection = common ++ Seq(commons.collections)
