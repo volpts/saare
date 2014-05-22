@@ -39,7 +39,7 @@ object Build extends Build {
     resourceDirectory in Test := baseDirectory.value / "res-test",
     javaOptions := Seq("-Xms1024m"),
     organization := "info.volpts",
-    scalaVersion := "2.11.0",
+    scalaVersion := "2.11.1",
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
