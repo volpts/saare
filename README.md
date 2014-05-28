@@ -114,5 +114,5 @@ Await.result(f, Duration.Inf) // => response as string
 ```
 
 # License
-The Saare Library is licensed under Apache License 2.0.
+The Saare Library is licensed under LGPLv3 or later.
 See COPYING.md for more details.
