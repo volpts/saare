@@ -120,6 +120,17 @@ object Dependencies {
     import constants._
     val Seq(core, effect, typelevel) = Seq("core", "effect", "typelevel").map(a => group %% s"$name-$a" % version)
   }
+  object cassandra {
+    object driver {
+      object constants {
+        val version = "2.0.2"
+        val name = "cassandra-driver"
+        val group = "com.datastax.cassandra"
+      }
+      import constants._
+      val Seq(core) = Seq("core").map(a => group % s"$name-$a" % version)
+    }
+  }
   object libraries {
     object constants {
       val test = "test"
@@ -135,5 +146,6 @@ object Dependencies {
     val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
     val `web-twitter` = common ++ Seq(twitter4j.core, twitter4j.stream, twitter4j.async)
     val `datastore-hsqldb` = common ++ Seq(hsqldb)
+    val `datastore-cassandra` = common ++ Seq(cassandra.driver.core)
   }
 }
