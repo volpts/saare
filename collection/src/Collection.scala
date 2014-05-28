@@ -1,5 +1,5 @@
 /*
-Copyright 2013-2014 sumito3478 <sumito3478@gmail.com>
+Copyright 2014 sumito3478 <sumito3478@gmail.com>
 
 This file is part of the Saare Library.
 
