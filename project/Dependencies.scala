@@ -18,11 +18,11 @@ import Keys._
 object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.2"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.1.5"
+  val scalatest = "org.scalatest" %% "scalatest" % "2.1.7"
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
-  val async_http_client = "com.ning" % "async-http-client" % "1.8.8"
+  val async_http_client = "com.ning" % "async-http-client" % "1.8.9"
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
 
@@ -49,7 +49,7 @@ object Dependencies {
   }
   object netty {
     object constants {
-      val version = "4.0.18.Final"
+      val version = "4.0.19.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -82,7 +82,7 @@ object Dependencies {
   }
   object dispatch {
     object constants {
-      val version = "0.11.0"
+      val version = "0.11.1"
       val name = "dispatch"
       val group = "net.databinder.dispatch"
     }
@@ -91,7 +91,7 @@ object Dependencies {
   }
   object akka {
     object constants {
-      val version = "2.3.2"
+      val version = "2.3.3"
       val name = "akka"
       val group = "com.typesafe.akka"
     }
