@@ -89,7 +89,7 @@ object Build extends Build {
   lazy val `datastore-cassandra` = project configure common libs libraries.`datastore-cassandra` dependsOn core
 
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`core-macros`, core, hashing, json, `http-client`, `web-twitter`, `datastore-hsqldb`, `datastore-cassandra`)
+    .aggregate(`core-macros`, core, collection, hashing, json, `http-client`, `web-twitter`, `datastore-hsqldb`, `datastore-cassandra`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
