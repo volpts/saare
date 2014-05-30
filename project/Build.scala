@@ -34,6 +34,11 @@ object Build extends Build {
       commitMessage <<= (version in ThisBuild) map (v => s"Bump version number to $v"))
   }
 
+  lazy val macroParadiseSettings = Seq(
+    resolvers += Resolver.sonatypeRepo("releases"),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
+  )
+
   lazy val commonSettings = Seq(
     scalaSource in Compile := baseDirectory.value / "src",
     scalaSource in Test := baseDirectory.value / "test",
@@ -58,7 +63,7 @@ object Build extends Build {
       "-Xexperimental",
       "-Xcheckinit",
       "-Xlint",
-      "-Yinfer-argument-types")) ++ scalariformSettings ++ releaseSettings
+      "-Yinfer-argument-types")) ++ scalariformSettings ++ releaseSettings ++ macroParadiseSettings
 
   val common = (p: Project) =>
     p.copy(id = s"saare-${p.id}")
