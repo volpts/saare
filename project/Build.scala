@@ -89,12 +89,14 @@ object Build extends Build {
 
   lazy val `web-twitter` = project configure common libs libraries.`web-twitter` dependsOn(core)
 
-  lazy val `datastore-hsqldb` = project configure common libs libraries.`datastore-hsqldb` dependsOn core
+  lazy val datasource = project configure common libs libraries.common dependsOn core
 
-  lazy val `datastore-cassandra` = project configure common libs libraries.`datastore-cassandra` dependsOn core
+  lazy val `datasource-hsqldb` = project configure common libs libraries.`datasource-hsqldb` dependsOn (core, datasource)
+
+  lazy val `datasource-cassandra` = project configure common libs libraries.`datasource-cassandra` dependsOn (core, datasource)
 
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`core-macros`, core, collection, hashing, json, `http-client`, `web-twitter`, `datastore-hsqldb`, `datastore-cassandra`)
+    .aggregate(`core-macros`, core, collection, hashing, json, `http-client`, `web-twitter`, `datasource-hsqldb`, `datasource-cassandra`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
