@@ -138,7 +138,7 @@ object Dependencies {
     import constants._
     private[this] def d = Dependencies
     val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, guava, scalaz.core, scalaz.effect, scalaz.typelevel, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test, jsr305 % "provided")
-    val macros = common ++ Seq()
+    val reflect = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val collection = common ++ Seq(commons.collections)
     val hashing = common ++ Seq(lz4 % test)

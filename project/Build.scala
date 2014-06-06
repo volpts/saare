@@ -75,9 +75,11 @@ object Build extends Build {
 
   import Dependencies._
 
-  lazy val `core-macros` = project configure common libs libraries.macros
+  lazy val `reflect-core` = project configure common libs libraries.reflect
 
-  lazy val core = project configure common libs libraries.core dependsOn `core-macros`
+  lazy val core = project configure common libs libraries.core dependsOn `reflect-core`
+
+  lazy val reflect = project configure common libs libraries.core dependsOn (core, `reflect-core`)
 
   lazy val hashing = project configure common libs libraries.hashing dependsOn core
 
@@ -96,7 +98,7 @@ object Build extends Build {
   lazy val `datasource-cassandra` = project configure common libs libraries.`datasource-cassandra` dependsOn (core, datasource)
 
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`core-macros`, core, collection, hashing, json, `http-client`, `web-twitter`, `datasource-hsqldb`, `datasource-cassandra`)
+    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, `web-twitter`, `datasource-hsqldb`, `datasource-cassandra`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
