@@ -110,7 +110,7 @@ object ReflectCore {
       def apply(x: String): Option[Variant] = value.get(x)
     }
     case class Text(value: String) extends Variant
-    case class Timestamp(value: Long) extends Variant
+    case class Timestamp(value: org.threeten.bp.Instant) extends Variant
     case class UUID(value: java.util.UUID) extends Variant
   }
   implicit class ContextW(val c: blackbox.Context) {
@@ -207,6 +207,7 @@ object ReflectCore {
       q"${q"$variant.asObject.value"}.mapValues($reflectCore.readVariant[$tp](_))"
     } else if (`type` =:= weakTypeOf[String]) q"$variant.asText.value"
     else if (`type` =:= weakTypeOf[java.util.UUID]) q"$variant.asUUID.value"
+    else if (`type` <:< weakTypeOf[org.threeten.bp.Instant]) q"$variant.asTimestamp.value"
     else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
     typecheck(c)(tree, weakTypeOf[A])
     tree
@@ -253,6 +254,7 @@ object ReflectCore {
       q"${weakTypeOf[Object].typeSymbol.companion}($x.mapValues($reflectCore.writeVariant[$tp](_)))"
     } else if (`type` =:= weakTypeOf[String]) q"${weakTypeOf[Text].typeSymbol.companion}($x)"
     else if (`type` =:= weakTypeOf[java.util.UUID]) q"${weakTypeOf[UUID].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[org.threeten.bp.Instant]) q"${weakTypeOf[Timestamp].typeSymbol.companion}($x)"
     else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
     typecheck(c)(tree, weakTypeOf[Variant])
     tree

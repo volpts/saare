@@ -36,6 +36,8 @@ object Dependencies {
 
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "2.0.3"
 
+  val jsr310 = "org.threeten" % "threetenbp" % "0.9"
+
   object slf4j {
     object constants {
       val version = "1.7.7"
@@ -137,7 +139,7 @@ object Dependencies {
     }
     import constants._
     private[this] def d = Dependencies
-    val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, guava, scalaz.core, scalaz.effect, scalaz.typelevel, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test, jsr305 % "provided")
+    val common = Seq(slf4j.api, commons.io, akka.actor, shapeless, guava, scalaz.core, scalaz.effect, scalaz.typelevel, jsr310, scalatest % test, logback % test, slf4j.to.jul % test, slf4j.over.jcl % test, slf4j.over.log4j % test, jsr305 % "provided")
     val reflect = common ++ Seq()
     val core = common ++ Seq(netty.buffer)
     val collection = common ++ Seq(commons.collections)
