@@ -24,7 +24,75 @@ import scala.collection.immutable._
 import akka.util._
 
 object ReflectCore {
-  sealed abstract class Variant
+  sealed abstract class Variant {
+    import Variant._
+    private[this] def castError(t: String) = sys.error(s"Expected $t but $this found")
+    def asBool = this match {
+      case x: Bool => x
+      case _ => castError("Bool")
+    }
+    def asInt32 = this match {
+      case x: Int32 => x
+      case _ => castError("Int32")
+    }
+    def asInt64 = this match {
+      case x: Int64 => x
+      case Int32(x) => Int64(x)
+      case _ => castError("Int64")
+    }
+    def asVarInt = this match {
+      case x: VarInt => x
+      case Int64(x) => VarInt(BigInt(x))
+      case Int32(x) => VarInt(BigInt(x))
+      case _ => castError("VarInt")
+    }
+    def asBinary = this match {
+      case x: Binary => x
+      case _ => castError("Binary")
+    }
+    def asDecimal = this match {
+      case x: Decimal => x
+      case Int64(x) => Decimal(BigDecimal(x))
+      case Int32(x) => Decimal(BigDecimal(x))
+      case Float64(x) => Decimal(BigDecimal(x))
+      case Float32(x) => Decimal(BigDecimal(x.toDouble))
+      case _ => castError("Decimal")
+    }
+    def asFloat64 = this match {
+      case x: Float64 => x
+      case Int32(x) => Float64(x)
+      case Float32(x) => Float64(x)
+      case _ => castError("Float64")
+    }
+    def asFloat32 = this match {
+      case x: Float32 => x
+      case _ => castError("Float32")
+    }
+    def asInetAddress = this match {
+      case x: InetAddress => x
+      case _ => castError("InetAddress")
+    }
+    def asSequence = this match {
+      case x: Sequence => x
+      case _ => castError("Sequence")
+    }
+    def asObject = this match {
+      case x: Object => x
+      case _ => castError("Object")
+    }
+    def asText = this match {
+      case x: Text => x
+      case _ => castError("Text")
+    }
+    def asTimestamp = this match {
+      case x: Timestamp => x
+      case _ => castError("Timestamp")
+    }
+    def asUUID = this match {
+      case x: UUID => x
+      case _ => castError("UUID")
+    }
+  }
   object Variant {
     case class Bool(value: Boolean) extends Variant
     case class Int32(value: Int) extends Variant
@@ -101,16 +169,6 @@ object ReflectCore {
     import Variant._
     val `type` = weakTypeOf[A]
     val reflectCore = q"_root_.saare.ReflectCore"
-    def readVariantValue(`type`: Type, v: Tree = variant): Tree = {
-      val x = TermName(c.freshName("casted"))
-      val msg = s"${`type`.typeSymbol.name.decodedName.toString} expected but %s found"
-      q"""
-        $v match {
-          case $x: ${`type`} => $x.value
-          case _ => sys.error($msg.format($v))
-        }
-      """
-    }
     val tree = if (`type`.typeSymbol.asClass.isCaseClass) {
       val typeInfo = reflectCaseClassInfo(c)(weakTypeOf[A])
       def loop(typeInfo: CaseClassInfo, seq: Tree): Seq[Tree] = {
@@ -121,34 +179,34 @@ object ReflectCore {
           val variant = q"$seq($i)"
           if (paramType.typeSymbol.asClass.isCaseClass) {
             val paramTypeInfo = reflectCaseClassInfo(c)(paramType.asInstanceOf[Type])
-            val children = loop(paramTypeInfo, readVariantValue(weakTypeOf[Sequence], variant))
+            val children = loop(paramTypeInfo, q"$variant.asSequence.value")
             q""" ${paramTypeInfo.companion.asInstanceOf[Tree]}(..$children) """
           } else {
             q"$reflectCore.readVariant[${paramType.asInstanceOf[Type]}]($variant)"
           }
         }
       }
-      val children = loop(typeInfo, readVariantValue(weakTypeOf[Sequence]))
+      val children = loop(typeInfo, q"$variant.asSequence.value")
       q""" ${typeInfo.companion.asInstanceOf[Tree]}(..$children) """
-    } else if (`type` =:= weakTypeOf[Boolean]) readVariantValue(weakTypeOf[Bool])
-    else if (`type` =:= weakTypeOf[Int]) readVariantValue(weakTypeOf[Int32])
-    else if (`type` =:= weakTypeOf[Long]) readVariantValue(weakTypeOf[Int64])
-    else if (`type` =:= weakTypeOf[BigInt]) readVariantValue(weakTypeOf[VarInt])
-    else if (`type` =:= weakTypeOf[ByteString]) readVariantValue(weakTypeOf[Binary])
-    else if (`type` =:= weakTypeOf[BigDecimal]) readVariantValue(weakTypeOf[Decimal])
-    else if (`type` =:= weakTypeOf[Double]) readVariantValue(weakTypeOf[Float64])
-    else if (`type` =:= weakTypeOf[Float]) readVariantValue(weakTypeOf[Float32])
-    else if (`type` =:= weakTypeOf[java.net.InetAddress]) readVariantValue(weakTypeOf[InetAddress])
+    } else if (`type` =:= weakTypeOf[Boolean]) q"$variant.asBool.value"
+    else if (`type` =:= weakTypeOf[Int]) q"$variant.asInt32.value"
+    else if (`type` =:= weakTypeOf[Long]) q"$variant.asInt64.value"
+    else if (`type` =:= weakTypeOf[BigInt]) q"$variant.asVarInt.value"
+    else if (`type` =:= weakTypeOf[ByteString]) q"$variant.asBinary.value"
+    else if (`type` =:= weakTypeOf[BigDecimal]) q"$variant.asDecimal.value"
+    else if (`type` =:= weakTypeOf[Double]) q"$variant.asFloat64.value"
+    else if (`type` =:= weakTypeOf[Float]) q"$variant.asFloat32.value"
+    else if (`type` =:= weakTypeOf[java.net.InetAddress]) q"$variant.asInetAddress.value"
     else if (`type` =:= weakTypeOf[Seq[_]]) {
       val TypeRef(_, _, actualTypeParams) = `type`
       val tp = actualTypeParams.head
-      q"${readVariantValue(weakTypeOf[Sequence])}.map($reflectCore.readVariant[$tp](_))"
+      q"${q"$variant.asSequence.value"}.map($reflectCore.readVariant[$tp](_))"
     } else if (`type` =:= weakTypeOf[Map[String, _]]) {
       val TypeRef(_, _, actualTypeParams) = `type`
       val tp = actualTypeParams(1)
-      q"${readVariantValue(weakTypeOf[Object])}.mapValues($reflectCore.readVariant[$tp](_))"
-    } else if (`type` =:= weakTypeOf[String]) readVariantValue(weakTypeOf[Text])
-    else if (`type` =:= weakTypeOf[java.util.UUID]) readVariantValue(weakTypeOf[UUID])
+      q"${q"$variant.asObject.value"}.mapValues($reflectCore.readVariant[$tp](_))"
+    } else if (`type` =:= weakTypeOf[String]) q"$variant.asText.value"
+    else if (`type` =:= weakTypeOf[java.util.UUID]) q"$variant.asUUID.value"
     else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
     typecheck(c)(tree, weakTypeOf[A])
     tree
