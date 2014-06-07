@@ -19,6 +19,7 @@ along with this software. If not, see http://www.gnu.org/licenses/.
 package saare
 
 import org.scalatest._
+import scala.collection.immutable._
 
 object ReflectCoreSpec {
   case class A(x1: String, x2: Int, x3: D, x4: Long)
@@ -30,6 +31,18 @@ object ReflectCoreSpec {
 }
 
 class ReflectCoreSpec extends FeatureSpec with GivenWhenThen with Matchers {
+  feature("ReflectCore#readVariant, writeVariant") {
+    scenario("read and write variant data") {
+      case class A(x1: String, x2: Int, x3: D, x4: Long)
+      case class D(x1: String, x2: Int, x3: Long)
+      import ReflectCore.Variant
+      val v = Variant.Sequence(Seq(Variant.Text("test"), Variant.Int32(10), Variant.Sequence(Seq(Variant.Text("test2"), Variant.Int32(1000), Variant.Int64(10000))), Variant.Int64(100)))
+      val a = ReflectCore.readVariant[A](v)
+      a shouldEqual A("test", 10, D("test2", 1000, 10000), 100)
+      val v2 = ReflectCore.writeVariant(a)
+      v2 shouldEqual v
+    }
+  }
   feature("ReflectionCore#convertByName, convertByIndex") {
     scenario("reflect, encode and decode case classes") {
       case class A(x1: String, x2: Int, x3: D, x4: Long)

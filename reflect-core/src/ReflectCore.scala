@@ -21,8 +21,184 @@ package saare
 import scala.language.experimental.macros
 import scala.reflect.macros._
 import scala.collection.immutable._
+import akka.util._
 
-class ReflectCore {
+object ReflectCore {
+  sealed abstract class Variant
+  object Variant {
+    case class Bool(value: Boolean) extends Variant
+    case class Int32(value: Int) extends Variant
+    case class Int64(value: Long) extends Variant
+    case class VarInt(value: scala.math.BigInt) extends Variant
+    case class Binary(value: ByteString) extends Variant
+    case class Decimal(value: BigDecimal) extends Variant
+    case class Float64(value: Double) extends Variant
+    case class Float32(value: Float) extends Variant
+    case class InetAddress(value: java.net.InetAddress) extends Variant
+    case class Sequence(value: scala.collection.immutable.Seq[Variant]) extends Variant {
+      def apply(i: Int): Option[Variant] = value.lift(i)
+    }
+    case class Object(value: scala.collection.immutable.ListMap[String, Variant]) extends Variant {
+      def apply(x: String): Option[Variant] = value.get(x)
+    }
+    case class Text(value: String) extends Variant
+    case class Timestamp(value: Long) extends Variant
+    case class UUID(value: java.util.UUID) extends Variant
+  }
+  implicit class ContextW(val c: blackbox.Context) {
+    import c.universe._
+    def warn(message: String) = c.warning(c.enclosingPosition, message)
+    def warnAndBail(message: String) = {
+      c.warn(message)
+      sys.error(message)
+    }
+    def bail(message: String) = {
+      c.error(c.enclosingPosition, message)
+      sys.error(message)
+    }
+    def typecheck(tree: Tree, expected: Type): Tree = try c.typecheck(tree = tree, pt = expected) catch {
+      case e: TypecheckException =>
+        println(s"Typecheck failed! The expanded tree is:\n$tree")
+        throw e
+    }
+  }
+  case class CaseClassInfo(params: Seq[(Universe#MethodSymbol, Universe#Type)], companion: Universe#Tree)
+  def reflectCaseClassInfo(c: blackbox.Context)(`type`: c.Type): CaseClassInfo = {
+    import c.universe._
+    val typeSymbol = `type`.typeSymbol
+    val typeName = typeSymbol.name.decodedName.toString
+    val `class` = typeSymbol.asClass
+    if (!`class`.isCaseClass) {
+      c.warnAndBail(s"Tried to reflect $typeName as a case class but $typeName seems not be a case class!")
+    }
+    val aTypeParams = `class`.typeParams
+    val TypeRef(_, _, actualTypeParams) = `type`
+    val aCompanion = {
+      def f: Tree = {
+        val symbol = typeSymbol.companion.orElse {
+          // due to SI-7567, if A is a inner class, companion returns NoSymbol...
+          // as I don't know how to avoid SI-7567, let's fall back into an anaphoric macro!
+          c.warn(s"Due to SI-7567, cannot get the companion of $typeName. Falling back to an anaphoric macro.")
+          return c.parse(typeName)
+        }
+        c.parse(symbol.fullName)
+      }
+      f
+    }
+    val paramMethods = `type`.decls.collect { case m: MethodSymbol if m.isCaseAccessor => m }.toList
+    val paramTypes = for (paramMethod <- paramMethods) yield {
+      val paramType = paramMethod.returnType
+      // if the return type is one of case class type parameters, replace with the actual type
+      aTypeParams.indexOf(paramType.typeSymbol) match {
+        case -1 => paramType
+        case i => actualTypeParams(i)
+      }
+    }
+    CaseClassInfo(params = paramMethods zip paramTypes, companion = aCompanion)
+  }
+  def readVariantImpl[A: c.WeakTypeTag](c: blackbox.Context)(variant: c.Tree): c.Tree = {
+    import c.universe._
+    import Variant._
+    val `type` = weakTypeOf[A]
+    val reflectCore = q"_root_.saare.ReflectCore"
+    def readVariantValue(`type`: Type, v: Tree = variant): Tree = {
+      val x = TermName(c.freshName("casted"))
+      val msg = s"${`type`.typeSymbol.name.decodedName.toString} expected but %s found"
+      q"""
+        $v match {
+          case $x: ${`type`} => $x.value
+          case _ => sys.error($msg.format($v))
+        }
+      """
+    }
+    val tree = if (`type`.typeSymbol.asClass.isCaseClass) {
+      val typeInfo = reflectCaseClassInfo(c)(weakTypeOf[A])
+      def loop(typeInfo: CaseClassInfo, seq: Tree): Seq[Tree] = {
+        val params = typeInfo.params
+        for (i <- 0 until params.size) yield {
+          val (method, paramType) = params(i)
+          val methodName = method.name.decodedName.toString
+          val variant = q"$seq($i)"
+          if (paramType.typeSymbol.asClass.isCaseClass) {
+            val paramTypeInfo = reflectCaseClassInfo(c)(paramType.asInstanceOf[Type])
+            val children = loop(paramTypeInfo, readVariantValue(weakTypeOf[Sequence], variant))
+            q""" ${paramTypeInfo.companion.asInstanceOf[Tree]}(..$children) """
+          } else {
+            q"$reflectCore.readVariant[${paramType.asInstanceOf[Type]}]($variant)"
+          }
+        }
+      }
+      val children = loop(typeInfo, readVariantValue(weakTypeOf[Sequence]))
+      q""" ${typeInfo.companion.asInstanceOf[Tree]}(..$children) """
+    } else if (`type` =:= weakTypeOf[Boolean]) readVariantValue(weakTypeOf[Bool])
+    else if (`type` =:= weakTypeOf[Int]) readVariantValue(weakTypeOf[Int32])
+    else if (`type` =:= weakTypeOf[Long]) readVariantValue(weakTypeOf[Int64])
+    else if (`type` =:= weakTypeOf[BigInt]) readVariantValue(weakTypeOf[VarInt])
+    else if (`type` =:= weakTypeOf[ByteString]) readVariantValue(weakTypeOf[Binary])
+    else if (`type` =:= weakTypeOf[BigDecimal]) readVariantValue(weakTypeOf[Decimal])
+    else if (`type` =:= weakTypeOf[Double]) readVariantValue(weakTypeOf[Float64])
+    else if (`type` =:= weakTypeOf[Float]) readVariantValue(weakTypeOf[Float32])
+    else if (`type` =:= weakTypeOf[java.net.InetAddress]) readVariantValue(weakTypeOf[InetAddress])
+    else if (`type` =:= weakTypeOf[Seq[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      q"${readVariantValue(weakTypeOf[Sequence])}.map($reflectCore.readVariant[$tp](_))"
+    } else if (`type` =:= weakTypeOf[Map[String, _]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams(1)
+      q"${readVariantValue(weakTypeOf[Object])}.mapValues($reflectCore.readVariant[$tp](_))"
+    } else if (`type` =:= weakTypeOf[String]) readVariantValue(weakTypeOf[Text])
+    else if (`type` =:= weakTypeOf[java.util.UUID]) readVariantValue(weakTypeOf[UUID])
+    else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
+    typecheck(c)(tree, weakTypeOf[A])
+    tree
+  }
+  def writeVariantImpl[A: c.WeakTypeTag](c: blackbox.Context)(x: c.Tree): c.Tree = {
+    import c.universe._
+    import Variant._
+    val `type` = weakTypeOf[A]
+    val reflectCore = q"_root_.saare.ReflectCore"
+    val tree = if (`type`.typeSymbol.asClass.isCaseClass) {
+      val typeInfo = reflectCaseClassInfo(c)(weakTypeOf[A])
+      def loop(typeInfo: CaseClassInfo, x: Tree): Seq[Tree] = {
+        val params = typeInfo.params
+        for (i <- 0 until params.size) yield {
+          val (method, paramType) = params(i)
+          val methodName = method.name.decodedName.toString
+          if (paramType.typeSymbol.asClass.isCaseClass) {
+            val paramTypeInfo = reflectCaseClassInfo(c)(paramType.asInstanceOf[Type])
+            val children = loop(paramTypeInfo, q"$x.${method.asInstanceOf[MethodSymbol]}")
+            q""" ${weakTypeOf[Variant.Sequence].typeSymbol.companion}(${weakTypeOf[Seq[_]].typeSymbol.companion}(..$children)) """
+          } else {
+            q"$reflectCore.writeVariant($x.${method.asInstanceOf[MethodSymbol]})"
+          }
+        }
+      }
+      val children = loop(typeInfo, x)
+      q""" ${weakTypeOf[Variant.Sequence].typeSymbol.companion}(${weakTypeOf[Seq[_]].typeSymbol.companion}(..$children)) """
+    } else if (`type` =:= weakTypeOf[Boolean]) q"${weakTypeOf[Bool].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Int]) q"${weakTypeOf[Int32].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Long]) q"${weakTypeOf[Int64].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[BigInt]) q"${weakTypeOf[VarInt].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[ByteString]) q"${weakTypeOf[Binary].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[BigDecimal]) q"${weakTypeOf[Decimal].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Double]) q"${weakTypeOf[Float64].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Float]) q"${weakTypeOf[Float32].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[java.net.InetAddress]) q"${weakTypeOf[InetAddress].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Seq[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      q"${weakTypeOf[Sequence].typeSymbol.companion}($x.map($reflectCore.writeVariant[$tp](_)))"
+    } else if (`type` =:= weakTypeOf[Map[String, _]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams(1)
+      q"${weakTypeOf[Object].typeSymbol.companion}($x.mapValues($reflectCore.writeVariant[$tp](_)))"
+    } else if (`type` =:= weakTypeOf[String]) q"${weakTypeOf[Text].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[java.util.UUID]) q"${weakTypeOf[UUID].typeSymbol.companion}($x)"
+    else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
+    typecheck(c)(tree, weakTypeOf[Variant])
+    tree
+  }
   sealed abstract class MapDecoder[Tree <: Universe#Tree]
   case class MapDecoderLeaf[Tree <: Universe#Tree](tree: Tree => Tree) extends MapDecoder[Tree]
   case class MapDecoderSeq[Tree <: Universe#Tree](reflector: DecodeReflector[Tree]) extends MapDecoder[Tree]
@@ -39,19 +215,7 @@ class ReflectCore {
     def encoderByName(implicit decodeReflector: DecodeReflector[Tree]): Tree => Tree
     def encoderByIndex(implicit decodeReflector: DecodeReflector[Tree]): Tree => Tree
   }
-  protected[this] implicit class ContextW(val self: blackbox.Context) {
-    import self._
-    def warn(message: String) = warning(enclosingPosition, message)
-    def warnAndBail(message: String) = {
-      warn(message)
-      sys.error(message)
-    }
-    def bail(message: String) = {
-      error(enclosingPosition, message)
-      sys.error(message)
-    }
-  }
-  protected[this] abstract class CaseClassTypeInfo[MethodSymbol <: Universe#MethodSymbol, Type <: Universe#Type, Tree <: Universe#Tree] {
+  abstract class CaseClassTypeInfo[MethodSymbol <: Universe#MethodSymbol, Type <: Universe#Type, Tree <: Universe#Tree] {
     def params: Seq[(MethodSymbol, Type)]
     def companion: Tree
   }
@@ -188,14 +352,11 @@ class ReflectCore {
     new EncodeReflector[Tree] {
       override def encoderByName(implicit decodeReflector: DecodeReflector[Tree]) = (x: Tree) => {
         val decodedType = decodeReflector.decodedType
-        println(s"decodedType = $decodedType")
         val decoder = decodeReflector.decoderByName
         val params = typeInfo.params
         val applyParams = for (i <- 0 until params.size) yield {
           val (method, paramType) = params(i)
           val paramName = method.name.decodedName.toString
-          println(s"paramName = $paramName")
-          println(decoder(paramName))
           decoder(paramName) match {
             case MapDecoderLazy(f, reflector) =>
               val tree = f(x)
@@ -245,18 +406,18 @@ class ReflectCore {
       }
     }
   }
+  def typecheck(c: blackbox.Context)(tree: c.Tree, expected: c.Type): c.Tree = try c.typecheck(tree = tree, pt = expected) catch {
+    case e: TypecheckException =>
+      println(s"Typecheck failed! The expanded tree is:\n$tree")
+      throw e
+  }
   def convertByNameImpl[A: c.WeakTypeTag, B: c.WeakTypeTag](c: blackbox.Context)(x: c.Expr[A]): c.Expr[B] = {
     import c.universe._
     implicit val decoder = classDecoder(c)(weakTypeOf[A])
     val encoder = caseClassEncoder(c)(weakTypeOf[B]).asInstanceOf[EncodeReflector[c.Tree]] // I don't know how to get rid of asInstanceOf...
     val encode = encoder.encoderByName
     val tree = encode(x.tree)
-    try c.typecheck(tree = tree, pt = weakTypeOf[B])
-    catch {
-      case e: TypecheckException =>
-        println(s"Typecheck failed while converting from ${weakTypeOf[A]} to ${weakTypeOf[B]} by name! The expanded tree is:\n$tree")
-        throw e
-    }
+    typecheck(c)(tree = tree, expected = weakTypeOf[B])
     c.Expr[B](c.parse(tree.toString)) // without toString and parse, got ClassCastException at runtime... I don't understand
   }
   def convertByIndexImpl[A: c.WeakTypeTag, B: c.WeakTypeTag](c: blackbox.Context)(x: c.Expr[A]): c.Expr[B] = {
@@ -265,16 +426,11 @@ class ReflectCore {
     val encoder = caseClassEncoder(c)(weakTypeOf[B]).asInstanceOf[EncodeReflector[c.Tree]] // I don't know how to get rid of asInstanceOf...
     val encode = encoder.encoderByIndex
     val tree = encode(x.tree)
-    try c.typecheck(tree = tree, pt = weakTypeOf[B])
-    catch {
-      case e: TypecheckException =>
-        println(s"Typecheck failed while converting from ${weakTypeOf[A]} to ${weakTypeOf[B]} by name! The expanded tree is:\n$tree")
-        throw e
-    }
+    typecheck(c)(tree = tree, expected = weakTypeOf[B])
     c.Expr[B](c.parse(tree.toString)) // without toString and parse, got ClassCastException at runtime... I don't understand
   }
-}
-object ReflectCore extends ReflectCore {
   def convertByName[A, B](x: A): B = macro convertByNameImpl[A, B]
   def convertByIndex[A, B](x: A): B = macro convertByIndexImpl[A, B]
+  def readVariant[A](variant: Variant): A = macro readVariantImpl[A]
+  def writeVariant[A](x: A): Variant = macro writeVariantImpl[A]
 }
