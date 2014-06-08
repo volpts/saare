@@ -145,9 +145,9 @@ object ReflectCore {
     val aCompanion = {
       def f: Tree = {
         val symbol = typeSymbol.companion.orElse {
-          // due to SI-7567, if A is a inner class, companion returns NoSymbol...
-          // as I don't know how to avoid SI-7567, let's fall back into an anaphoric macro!
-          c.warn(s"Due to SI-7567, cannot get the companion of $typeName. Falling back to an anaphoric macro.")
+          // due to SI-7567, if A is a local class, companion returns NoSymbol...
+          // as I don't know how to avoid SI-7567, let's fall back into short name.
+          c.warn(s"Due to SI-7567, cannot get the full name of the companion object of local type $typeName. Falling back to the short name.")
           return c.parse(typeName)
         }
         c.parse(symbol.fullName)
@@ -341,9 +341,9 @@ object ReflectCore {
     val aCompanion = {
       def f: Tree = {
         val symbol = typeSymbol.companion.orElse {
-          // due to SI-7567, if A is a inner class, companion returns NoSymbol...
-          // as I don't know how to avoid SI-7567, let's fall back into an anaphoric macro!
-          c.warn(s"Due to SI-7567, cannot get the companion of $typeName. Falling back to an anaphoric macro.")
+          // due to SI-7567, if A is a local class, companion returns NoSymbol...
+          // as I don't know how to avoid SI-7567, let's fall back into short name.
+          c.warn(s"Due to SI-7567, cannot get the full name of the companion object of local type $typeName. Falling back to the short name.")
           return c.parse(typeName)
         }
         c.parse(symbol.fullName)
