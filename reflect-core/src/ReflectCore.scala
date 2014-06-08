@@ -94,6 +94,7 @@ object ReflectCore {
     }
   }
   object Variant {
+    case object Undefined extends Variant
     case class Bool(value: Boolean) extends Variant
     case class Int32(value: Int) extends Variant
     case class Int64(value: Long) extends Variant
@@ -104,10 +105,10 @@ object ReflectCore {
     case class Float32(value: Float) extends Variant
     case class InetAddress(value: java.net.InetAddress) extends Variant
     case class Sequence(value: scala.collection.immutable.Seq[Variant]) extends Variant {
-      def apply(i: Int): Option[Variant] = value.lift(i)
+      def apply(i: Int): Variant = value.lift(i).getOrElse(Undefined)
     }
     case class Object(value: scala.collection.immutable.ListMap[String, Variant]) extends Variant {
-      def apply(x: String): Option[Variant] = value.get(x)
+      def apply(x: String): Variant = value.get(x).getOrElse(Undefined)
     }
     case class Text(value: String) extends Variant
     case class Timestamp(value: org.threeten.bp.Instant) extends Variant
@@ -164,12 +165,24 @@ object ReflectCore {
     }
     CaseClassInfo(params = paramMethods zip paramTypes, companion = aCompanion)
   }
-  def readVariantImpl[A: c.WeakTypeTag](c: blackbox.Context)(variant: c.Tree): c.Tree = {
+  def readVariantImpl[A: c.WeakTypeTag](c: blackbox.Context)(x: c.Tree): c.Tree = {
     import c.universe._
     import Variant._
     val `type` = weakTypeOf[A]
     val reflectCore = q"_root_.saare.ReflectCore"
-    val tree = if (`type`.typeSymbol.asClass.isCaseClass) {
+    val variant = TermName(c.freshName("x"))
+    val tree = if (`type` <:< weakTypeOf[None.type]) {
+      q"${weakTypeOf[Variant].companion}.Undefined"
+    } else if (`type` <:< weakTypeOf[Some[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      q" _root_.scala.Some($reflectCore.readVariant[$tp]($variant))"
+    } else if (`type` <:< weakTypeOf[Option[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      val ret = q"(if ($variant == $reflectCore.Variant.Undefined) _root_.scala.None else _root_.scala.Some($reflectCore.readVariant[$tp]($variant)))"
+      ret
+    } else if (`type`.typeSymbol.asClass.isCaseClass) {
       val typeInfo = reflectCaseClassInfo(c)(weakTypeOf[A])
       def loop(typeInfo: CaseClassInfo, seq: Tree): Seq[Tree] = {
         val params = typeInfo.params
@@ -179,14 +192,14 @@ object ReflectCore {
           val variant = q"$seq($i)"
           if (paramType.typeSymbol.asClass.isCaseClass) {
             val paramTypeInfo = reflectCaseClassInfo(c)(paramType.asInstanceOf[Type])
-            val children = loop(paramTypeInfo, q"$variant.asSequence.value")
+            val children = loop(paramTypeInfo, q"$variant.asSequence")
             q""" ${paramTypeInfo.companion.asInstanceOf[Tree]}(..$children) """
           } else {
             q"$reflectCore.readVariant[${paramType.asInstanceOf[Type]}]($variant)"
           }
         }
       }
-      val children = loop(typeInfo, q"$variant.asSequence.value")
+      val children = loop(typeInfo, q"$variant.asSequence")
       q""" ${typeInfo.companion.asInstanceOf[Tree]}(..$children) """
     } else if (`type` =:= weakTypeOf[Boolean]) q"$variant.asBool.value"
     else if (`type` =:= weakTypeOf[Int]) q"$variant.asInt32.value"
@@ -209,15 +222,27 @@ object ReflectCore {
     else if (`type` =:= weakTypeOf[java.util.UUID]) q"$variant.asUUID.value"
     else if (`type` <:< weakTypeOf[org.threeten.bp.Instant]) q"$variant.asTimestamp.value"
     else sys.error(s"Type ${`type`} is not (yet) supported by ReflectCore#readVariant!")
-    typecheck(c)(tree, weakTypeOf[A])
-    tree
+    val ret = q"{ val $variant = $x; $tree }"
+    typecheck(c)(ret, weakTypeOf[A])
+    ret
   }
   def writeVariantImpl[A: c.WeakTypeTag](c: blackbox.Context)(x: c.Tree): c.Tree = {
     import c.universe._
     import Variant._
     val `type` = weakTypeOf[A]
     val reflectCore = q"_root_.saare.ReflectCore"
-    val tree = if (`type`.typeSymbol.asClass.isCaseClass) {
+    val tree = if (`type` <:< weakTypeOf[None.type]) q"${weakTypeOf[Variant].typeSymbol.companion}.Undefined"
+    else if (`type` <:< weakTypeOf[Some[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      val x2 = TermName(c.freshName("x"))
+      q"$reflectCore.writeVariant[$tp]($x.get)"
+    } else if (`type` <:< weakTypeOf[Option[_]]) {
+      val TypeRef(_, _, actualTypeParams) = `type`
+      val tp = actualTypeParams.head
+      val x2 = TermName(c.freshName("x"))
+      q"($x match { case Some($x2) => $reflectCore.writeVariant[$tp]($x2) ; case None => ${weakTypeOf[Variant].typeSymbol.companion}.Undefined})"
+    } else if (`type`.typeSymbol.asClass.isCaseClass) {
       val typeInfo = reflectCaseClassInfo(c)(weakTypeOf[A])
       def loop(typeInfo: CaseClassInfo, x: Tree): Seq[Tree] = {
         val params = typeInfo.params
@@ -491,6 +516,6 @@ object ReflectCore {
   }
   def convertByName[A, B](x: A): B = macro convertByNameImpl[A, B]
   def convertByIndex[A, B](x: A): B = macro convertByIndexImpl[A, B]
-  def readVariant[A](variant: Variant): A = macro readVariantImpl[A]
+  def readVariant[A](x: Variant): A = macro readVariantImpl[A]
   def writeVariant[A](x: A): Variant = macro writeVariantImpl[A]
 }

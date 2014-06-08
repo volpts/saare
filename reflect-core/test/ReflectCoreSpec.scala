@@ -33,14 +33,26 @@ object ReflectCoreSpec {
 class ReflectCoreSpec extends FeatureSpec with GivenWhenThen with Matchers {
   feature("ReflectCore#readVariant, writeVariant") {
     scenario("read and write variant data") {
+      import ReflectCore.{ writeVariant, readVariant, Variant }
       case class A(x1: String, x2: Int, x3: D, x4: Long)
       case class D(x1: String, x2: Int, x3: Long)
+      case class G(x1: String, x2: Int)
+      case class H(x1: String, x2: Int, x3: Option[D])
       import ReflectCore.Variant
       val v = Variant.Sequence(Seq(Variant.Text("test"), Variant.Int32(10), Variant.Sequence(Seq(Variant.Text("test2"), Variant.Int32(1000), Variant.Int64(10000))), Variant.Int64(100)))
       val a = ReflectCore.readVariant[A](v)
       a shouldEqual A("test", 10, D("test2", 1000, 10000), 100)
       val v2 = ReflectCore.writeVariant(a)
       v2 shouldEqual v
+      ReflectCore.writeVariant(None) shouldEqual Variant.Undefined
+      ReflectCore.writeVariant(Some(100)) shouldEqual Variant.Int32(100)
+      val o: Option[Int] = Some(100)
+      readVariant[Option[Int]](writeVariant(o))
+      readVariant[G](writeVariant(H("test", 10, None))) shouldEqual G("test", 10)
+      readVariant[G](writeVariant(H("test", 10, Some(D("test2", 1000, 10000))))) shouldEqual G("test", 10)
+      val a2 = writeVariant(A("test", 10, D("test2", 1000, 10000), 100))
+      val h = readVariant[H](a2)
+      h shouldEqual H("test", 10, Some(D("test2", 1000, 10000)))
     }
   }
   feature("ReflectionCore#convertByName, convertByIndex") {
