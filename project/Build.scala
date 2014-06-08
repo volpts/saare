@@ -91,6 +91,8 @@ object Build extends Build {
 
   lazy val `web-twitter` = project configure common libs libraries.`web-twitter` dependsOn(core)
 
+  lazy val pickle = project configure common libs libraries.common dependsOn core
+
   lazy val datasource = project configure common libs libraries.common dependsOn core
 
   lazy val `datasource-hsqldb` = project configure common libs libraries.`datasource-hsqldb` dependsOn (core, datasource)
