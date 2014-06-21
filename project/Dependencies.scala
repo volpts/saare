@@ -22,11 +22,11 @@ import Keys._
 object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.2"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.1.7"
+  val scalatest = "org.scalatest" %% "scalatest" % "2.2.0"
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
-  val async_http_client = "com.ning" % "async-http-client" % "1.8.9"
+  val async_http_client = "com.ning" % "async-http-client" % "1.8.11"
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
 
@@ -55,7 +55,7 @@ object Dependencies {
   }
   object netty {
     object constants {
-      val version = "4.0.19.Final"
+      val version = "4.0.20.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -64,7 +64,7 @@ object Dependencies {
   }
   object jackson {
     object constants {
-      val version = "2.3.3"
+      val version = "2.4.1"
       val name = "jackson"
       object group {
         val prefix = s"com.fasterxml.$name"
@@ -74,7 +74,8 @@ object Dependencies {
       val module = s"$name-module"
     }
     import constants._
-    val Seq(core, databind) = Seq("core", "databind").map(a => group.core % s"$name-$a" % version)
+    val Seq(core) = Seq("core").map(a => group.core % s"$name-$a" % version)
+    val databind = group.core % s"$name-databind" % "2.4.1.1"
     val Seq(afterburner) = Seq("afterburner").map(a => group.module % s"$module-$a" % version)
   }
   object commons {
