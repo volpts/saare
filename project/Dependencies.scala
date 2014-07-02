@@ -148,7 +148,5 @@ object Dependencies {
     val json = common ++ Seq(jackson.core, jackson.databind, jackson.afterburner)
     val `http-client` = common ++ Seq(async_http_client /* ensure minimum version */, dispatch.core)
     val crawler = common ++ Seq(twitter4j.core, twitter4j.stream, twitter4j.async)
-    val `datasource-hsqldb` = common ++ Seq(hsqldb)
-    val `datasource-cassandra` = common ++ Seq(cassandra.driver.core)
   }
 }

@@ -93,14 +93,8 @@ object Build extends Build {
 
   lazy val pickle = project configure common libs libraries.common dependsOn core
 
-  lazy val datasource = project configure common libs libraries.common dependsOn core
-
-  lazy val `datasource-hsqldb` = project configure common libs libraries.`datasource-hsqldb` dependsOn (core, datasource)
-
-  lazy val `datasource-cassandra` = project configure common libs libraries.`datasource-cassandra` dependsOn (core, datasource)
-
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, crawler, `datasource-hsqldb`, `datasource-cassandra`)
+    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, crawler)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
