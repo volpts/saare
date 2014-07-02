@@ -89,7 +89,7 @@ object Build extends Build {
 
   lazy val `http-client` = project configure common libs libraries.`http-client` dependsOn (core, json)
 
-  lazy val `web-twitter` = project configure common libs libraries.`web-twitter` dependsOn(core)
+  lazy val crawler = project configure common libs libraries.crawler dependsOn core
 
   lazy val pickle = project configure common libs libraries.common dependsOn core
 
@@ -100,7 +100,7 @@ object Build extends Build {
   lazy val `datasource-cassandra` = project configure common libs libraries.`datasource-cassandra` dependsOn (core, datasource)
 
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, `web-twitter`, `datasource-hsqldb`, `datasource-cassandra`)
+    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, crawler, `datasource-hsqldb`, `datasource-cassandra`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
