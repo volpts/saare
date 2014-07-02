@@ -26,7 +26,7 @@ object Dependencies {
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
-  val async_http_client = "com.ning" % "async-http-client" % "1.8.11"
+  val async_http_client = "com.ning" % "async-http-client" % "1.8.12"
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
 
@@ -36,7 +36,7 @@ object Dependencies {
 
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "2.0.3"
 
-  val jsr310 = "org.threeten" % "threetenbp" % "0.9"
+  val jsr310 = "org.threeten" % "threetenbp" % "1.0"
 
   object slf4j {
     object constants {
@@ -55,7 +55,7 @@ object Dependencies {
   }
   object netty {
     object constants {
-      val version = "4.0.20.Final"
+      val version = "4.0.21.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -98,7 +98,7 @@ object Dependencies {
   }
   object akka {
     object constants {
-      val version = "2.3.3"
+      val version = "2.3.4"
       val name = "akka"
       val group = "com.typesafe.akka"
     }
@@ -107,7 +107,7 @@ object Dependencies {
   }
   object twitter4j {
     object constants {
-      val version = "4.0.1"
+      val version = "4.0.2"
       val name = "twitter4j"
       val group = "org.twitter4j"
     }
@@ -116,7 +116,7 @@ object Dependencies {
   }
   object scalaz {
     object constants {
-      val version = "7.1.0-M7"
+      val version = "7.1.0-RC1"
       val name = "scalaz"
       val group = "org.scalaz"
     }

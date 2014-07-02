@@ -36,7 +36,7 @@ object Build extends Build {
 
   lazy val macroParadiseSettings = Seq(
     resolvers += Resolver.sonatypeRepo("releases"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.0" cross CrossVersion.full)
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.0.1" cross CrossVersion.full)
   )
 
   lazy val commonSettings = Seq(
