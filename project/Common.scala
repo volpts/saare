@@ -49,7 +49,7 @@ abstract class Common extends Build {
     resourceDirectory in Test := baseDirectory.value / "res-test",
     javaOptions := Seq("-Xms1024m"),
     organization := "info.volpts",
-    scalaVersion := "2.11.1",
+    scalaVersion := "2.11.2",
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
