@@ -4,6 +4,8 @@
 /project/project/target
 /*/target
 /*/project/*
+/*/*/target
+/*/*/project/*
 
 # eclipse
 /.project

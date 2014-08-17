@@ -18,8 +18,9 @@ along with this software. If not, see http://www.gnu.org/licenses/.
 */
 import sbt._
 import Keys._
+import java.io._
 
-object Build extends Build {
+abstract class Common extends Build {
   import scalariform.formatter.preferences._
   import com.typesafe.sbt.SbtScalariform
   lazy val scalariformSettings = SbtScalariform.scalariformSettings ++ Seq(
@@ -65,36 +66,11 @@ object Build extends Build {
       "-Xlint",
       "-Yinfer-argument-types")) ++ scalariformSettings ++ releaseSettings ++ macroParadiseSettings
 
-  val common = (p: Project) =>
-    p.copy(id = s"saare-${p.id}")
-      .settings(commonSettings: _*)
+  def common(p: Project) =
+      p.copy(id = s"saare-${p.id}")
+        .settings(commonSettings: _*)
 
-  implicit class ProjectW(val self: Project) extends AnyVal {
+  implicit class ProjectW(val self: Project) {
     def libs(xs: Seq[ModuleID]) = self.settings(libraryDependencies ++= xs)
   }
-
-  import Dependencies._
-
-  lazy val `reflect-core` = project configure common libs libraries.reflect
-
-  lazy val core = project configure common libs libraries.core dependsOn `reflect-core`
-
-  lazy val reflect = project configure common libs libraries.core dependsOn (core, `reflect-core`)
-
-  lazy val hashing = project configure common libs libraries.hashing dependsOn core
-
-  lazy val collection = project configure common libs libraries.collection dependsOn core
-
-  lazy val json = project configure common libs libraries.json dependsOn core
-
-  lazy val `http-client` = project configure common libs libraries.`http-client` dependsOn (core, json)
-
-  lazy val crawler = project configure common libs libraries.crawler dependsOn core
-
-  lazy val pickle = project configure common libs libraries.common dependsOn core
-
-  lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`reflect-core`, core, reflect, collection, hashing, json, `http-client`, crawler)
-    .settings(publishArtifact := false)
-    .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }
