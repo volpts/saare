@@ -22,7 +22,7 @@ import Keys._
 object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.2"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.2.0"
+  val scalatest = "org.scalatest" %% "scalatest" % "2.2.1"
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
@@ -34,7 +34,7 @@ object Dependencies {
 
   val guava = "com.google.guava" % "guava" % "17.0"
 
-  val jsr305 = "com.google.code.findbugs" % "jsr305" % "2.0.3"
+  val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.0"
 
   val jsr310 = "org.threeten" % "threetenbp" % "1.0"
 
@@ -55,7 +55,7 @@ object Dependencies {
   }
   object netty {
     object constants {
-      val version = "4.0.21.Final"
+      val version = "4.0.23.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -64,7 +64,7 @@ object Dependencies {
   }
   object jackson {
     object constants {
-      val version = "2.4.1"
+      val version = "2.4.2"
       val name = "jackson"
       object group {
         val prefix = s"com.fasterxml.$name"
@@ -74,8 +74,7 @@ object Dependencies {
       val module = s"$name-module"
     }
     import constants._
-    val Seq(core) = Seq("core").map(a => group.core % s"$name-$a" % version)
-    val databind = group.core % s"$name-databind" % "2.4.1.1"
+    val Seq(core, databind) = Seq("core", "databind").map(a => group.core % s"$name-$a" % version)
     val Seq(afterburner) = Seq("afterburner").map(a => group.module % s"$module-$a" % version)
   }
   object commons {
@@ -89,7 +88,7 @@ object Dependencies {
   }
   object dispatch {
     object constants {
-      val version = "0.11.1"
+      val version = "0.11.2"
       val name = "dispatch"
       val group = "net.databinder.dispatch"
     }
@@ -98,7 +97,7 @@ object Dependencies {
   }
   object akka {
     object constants {
-      val version = "2.3.4"
+      val version = "2.3.5"
       val name = "akka"
       val group = "com.typesafe.akka"
     }
@@ -116,7 +115,7 @@ object Dependencies {
   }
   object scalaz {
     object constants {
-      val version = "7.1.0-RC1"
+      val version = "7.1.0"
       val name = "scalaz"
       val group = "org.scalaz"
     }
