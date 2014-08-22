@@ -29,7 +29,6 @@ import scala.collection.immutable._
 
 class Pickle {
   import Pickle._
-  import ReflectCore.Variant
   case class MismatchedTagException(id: Int) extends ControlThrowable
   private[this] def readVariantImpl(in: LittleEndianDataInputStream): Variant = {
     val tag = in.readByte
