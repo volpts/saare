@@ -43,6 +43,36 @@ object ReflectCore {
     }
     def checking(expected: c.Type)(f: => c.Tree): c.Tree = typecheck(f, expected)
 
+    abstract class ExtractConstant[A] {
+      def unapply(constant: Constant): Option[A]
+    }
+    implicit object extractStringConstant extends ExtractConstant[String] {
+      def unapply(constant: Constant) = constant match {
+        case Constant(value: String) => Some(value)
+        case _ => None
+      }
+    }
+    implicit object extractBooleanConstant extends ExtractConstant[Boolean] {
+      def unapply(constant: Constant) = constant match {
+        case Constant(value: Boolean) => Some(value)
+        case _ => None
+      }
+    }
+    implicit object extractLongConstant extends ExtractConstant[Long] {
+      def unapply(constant: Constant) = constant match {
+        case Constant(value: Long) => Some(value)
+        case _ => None
+      }
+    }
+    def macroAnnotationParam[A: ExtractConstant](name: String): Option[A] = c.macroApplication match {
+      case q"new $cls(..${ params: List[Tree] }).macroTransform($tree)" =>
+        val C = implicitly[ExtractConstant[A]]
+        params.collectFirst {
+          case AssignOrNamedArg(Ident(TermName(`name`)), Literal(C(value))) => value
+        }
+      case _ => None
+    }
+
     case class CaseClassTypeInfo(params: Seq[(MethodSymbol, Type)])
 
     def companion(`type`: c.Type): c.Tree = {
