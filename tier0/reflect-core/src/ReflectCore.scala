@@ -41,6 +41,7 @@ object ReflectCore {
         println(s"Typecheck failed! The expanded tree is:\n$tree")
         throw e
     }
+    def checking(expected: c.Type)(f: => c.Tree): c.Tree = typecheck(f, expected)
 
     case class CaseClassTypeInfo(params: Seq[(MethodSymbol, Type)])
 
