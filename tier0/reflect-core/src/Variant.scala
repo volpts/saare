@@ -107,7 +107,7 @@ object Variant {
     def apply(x: String): Variant = value.get(x).getOrElse(Undefined)
   }
   case class Text(value: String) extends Variant
-  case class Timestamp(value: org.threeten.bp.Instant) extends Variant
+  case class Timestamp(value: java.time.Instant) extends Variant
   case class UUID(value: java.util.UUID) extends Variant
 }
 

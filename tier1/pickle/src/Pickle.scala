@@ -131,7 +131,7 @@ class Pickle {
       case Tag.Int32.id =>
         Variant.Int32(in.readInt)
       case Tag.Timestamp.id =>
-        Variant.Timestamp(org.threeten.bp.Instant.ofEpochMilli(in.readLong))
+        Variant.Timestamp(java.time.Instant.ofEpochMilli(in.readLong))
       case Tag.UUID.id =>
         val msb = in.readLong
         val lsb = in.readLong
