@@ -22,7 +22,7 @@ import java.io._
 
 object Tier0 extends Tier(0) {
   import Dependencies._
-  lazy val `reflect-core` = project configure common libs Seq(
+  lazy val base = project configure common libs Seq(
     slf4j.api,
     akka.actor,
     shapeless,

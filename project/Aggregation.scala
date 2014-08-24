@@ -25,7 +25,7 @@ import Tier2._
 object Aggregation extends Common {
   import Dependencies._
   lazy val root = project.in(file(".")).configure(common).libs(libraries.common)
-    .aggregate(`reflect-core`, core, reflect, collection, json, `http-client`)
+    .aggregate(base, core, reflect, collection, json, `http-client`)
     .settings(publishArtifact := false)
     .settings(sbtunidoc.Plugin.unidocSettings: _*)
 }

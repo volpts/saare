@@ -22,9 +22,9 @@ import java.io._
 
 object Tier1 extends Tier(1) {
   import Dependencies._
-  lazy val core = project configure common libs libraries.core dependsOn Tier0.`reflect-core`
+  lazy val core = project configure common libs libraries.core dependsOn Tier0.base
 
-  lazy val reflect = project configure common libs libraries.core dependsOn (core, Tier0.`reflect-core`)
+  lazy val reflect = project configure common libs libraries.core dependsOn (core, Tier0.base)
 
   lazy val collection = project configure common libs libraries.collection dependsOn core
 
