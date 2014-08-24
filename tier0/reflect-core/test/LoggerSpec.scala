@@ -20,23 +20,30 @@ package saare
 
 import org.scalatest._
 import saare.Logger.Slf4jLogger
+import scalaz.effect.IO
 
 class LoggerSpec extends FeatureSpec with GivenWhenThen with Matchers {
   implicit val logger = new Slf4jLogger("LoggerSpec")
   feature("Logger") {
     scenario("logging") {
       @Logger.logging(showRet = true, level = "error")
-      def test(x: String, y: Int, z: Long): String = x + y + z
+      def test(x: String, y: Int, z: Long): IO[String] = IO(x + y + z)
       @Logger.logging(level = "info")
-      def test2(x: String, y: Int, z: Long): String = x + y + z
-      test("a", 1, 1)
-      test2("b", 2, 2)
+      def test2(x: String, y: Int, z: Long): IO[String] = IO(x + y + z)
+      val main = for {
+        _ <- test("a", 1, 1)
+        _ <- test2("b", 2, 2)
+      } yield ()
+      main.unsafePerformIO
     }
     scenario("Logger.<level>") {
-      Logger.debug("test")
-      Logger.info("test")
-      Logger.warn("test")
-      Logger.error("test")
+      val main = for {
+        _ <- Logger.debug("test")
+        _ <- Logger.info("test")
+        _ <- Logger.warn("test")
+        _ <- Logger.error("test")
+      } yield ()
+      main.unsafePerformIO
     }
   }
 }

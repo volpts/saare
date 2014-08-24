@@ -27,6 +27,7 @@ object Tier0 extends Tier(0) {
     akka.actor,
     shapeless,
     scalaz.core,
+    scalaz.effect,
     scalatest % "test",
     logback % "test" ,
     slf4j.to.jul % "test",
