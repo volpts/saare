@@ -21,7 +21,7 @@ package saare
 import org.scalatest._
 import scala.collection.immutable._
 
-object ReflectCoreSpec {
+object ReflectSpec {
   case class A(x1: String, x2: Int, x3: D, x4: Long)
   case class B(x1: String, x2: Int, x3: E)
   case class C(x4: Long, x1: String, x3: E, x2: Int)
@@ -30,7 +30,7 @@ object ReflectCoreSpec {
   case class F(_1: String, _2: Long, _3: D, _4: Long)
 }
 
-class ReflectCoreSpec extends FeatureSpec with GivenWhenThen with Matchers {
+class ReflectSpec extends FeatureSpec with GivenWhenThen with Matchers {
   feature("ReflectCore#readVariant, writeVariant") {
     scenario("read and write variant data") {
       import Reflect.{ writeVariant, readVariant }
