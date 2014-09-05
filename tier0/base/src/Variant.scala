@@ -19,6 +19,9 @@ along with this software. If not, see http://www.gnu.org/licenses/.
 package saare
 
 import akka.util._
+import scala.util.control.ControlThrowable
+import scala.language.experimental.macros
+import scalaz._, Scalaz._
 
 sealed abstract class Variant {
   import Variant._
@@ -90,6 +93,59 @@ sealed abstract class Variant {
   }
 }
 object Variant {
+  trait Reflect extends saare.Reflect {
+    import c.universe._
+    def weakCast[A: c.WeakTypeTag](src: c.Tree): c.Tree = checking(weakTypeOf[Validation[String, A]]) {
+      val dst = weakTypeOf[A]
+      val simpleConverted = List(weakTypeOf[Bool], weakTypeOf[Int32], weakTypeOf[Binary], weakTypeOf[InetAddress], weakTypeOf[Sequence], weakTypeOf[Object], weakTypeOf[Text], weakTypeOf[Timestamp], weakTypeOf[UUID])
+      val dstInfo = reflectCaseClass[A]
+      val x = TermName(c.freshName("x"))
+      val failure = q"""("Cannot convert " + $x + " to " + ${dst.typeSymbol.name.decodedName.toString}).failure[${weakTypeOf[A]}]"""
+      val tree = if (dst <:< weakTypeOf[Undefined.type])
+        q"_root_.saare.Variant.Undefined.success[${weakTypeOf[String]}]"
+      else if (simpleConverted.exists(x => dst <:< x))
+        q"""$src match {
+          case $x: $dst => $x.success[${weakTypeOf[String]}]
+          case $x => $failure
+        }"""
+      else if (dst <:< weakTypeOf[Int64])
+        q"""$src match {
+          case $x: ${weakTypeOf[Int64]} => $x.success[${weakTypeOf[String]}]
+          case ${companion[Int32]}($x) => ${companion[Int64]}(x).success[${weakTypeOf[String]}]
+          case $x => $failure
+        }"""
+      else if (dst <:< weakTypeOf[VarInt])
+        q"""$src match {
+          case $x: ${weakTypeOf[VarInt]} => $x.success[${weakTypeOf[String]}]
+          case ${companion[Int64]}($x) => ${companion[VarInt]}(_root_.scala.math.BigInt($x)).success[${weakTypeOf[String]}]
+          case ${companion[Int32]}($x) => ${companion[VarInt]}(_root_.scala.math.BigInt($x)).success[${weakTypeOf[String]}]
+          case $x => $failure
+        }"""
+      else if (dst <:< weakTypeOf[Decimal])
+        q"""$src match {
+          case $x: ${weakTypeOf[Decimal]} => $x
+          case ${companion[Int64]}($x) => ${companion[Decimal]}(_root_.scala.math.BigDecimal($x)).success[${weakTypeOf[String]}]
+          case ${companion[Int32]}($x) => ${companion[Decimal]}(_root_.scala.math.BigDecimal($x)).success[${weakTypeOf[String]}]
+          case ${companion[Float64]}($x) => ${companion[Decimal]}(_root_.scala.math.BigDecimal($x)).success[${weakTypeOf[String]}]
+          case $x => $failure
+        }"""
+      else if (dst <:< weakTypeOf[Float64])
+        q"""$src match {
+          case $x: ${weakTypeOf[Float64]} => $x.success[${weakTypeOf[String]}]
+          case ${companion[Int32]}($x) => ${companion[Float64]}($x).success[${weakTypeOf[String]}]
+          case $x => $failure
+        }"""
+      else warnAndBail(s"Variant.weakCast[${dst.typeSymbol.name.decodedName.toString}] is not supported (yet).")
+      q"""
+      {
+        import scalaz._, Scalaz._
+        $tree
+      }
+      """
+    }
+  }
+  class Macro(val c: scala.reflect.macros.whitebox.Context) extends Reflect
+  def weakCast[A](src: Variant): Validation[String, A] = macro Macro.weakCast[A]
   case object Undefined extends Variant
   case class Bool(value: Boolean) extends Variant
   case class Int32(value: Int) extends Variant
