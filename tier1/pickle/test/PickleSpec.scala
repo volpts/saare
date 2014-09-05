@@ -32,7 +32,7 @@ object PickleSpec {
 class PickleSpec extends FeatureSpec with GivenWhenThen with Matchers {
   feature("Pickle.write") {
     scenario("serialize case classes") {
-      import ReflectCore.{ readVariant, writeVariant }
+      import Reflect.{ readVariant, writeVariant }
       case class A(x1: String, x2: Int, x3: D, x4: Long)
       case class B(x1: String, x2: Int, x3: E)
       case class C(x4: Long, x1: String, x3: E, x2: Int)

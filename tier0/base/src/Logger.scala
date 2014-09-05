@@ -66,7 +66,7 @@ object Logger {
   object Slf4jLogger {
     sealed trait Tag
   }
-  class Macro(val c: Context) extends ReflectCore.Reflect {
+  class Macro(val c: Context) extends Reflect {
     import c.universe._
     lazy val logName = {
       val p = c.enclosingPosition
