@@ -22,25 +22,25 @@ import Keys._
 object Dependencies {
   val logback = "ch.qos.logback" % "logback-classic" % "1.1.2"
 
-  val scalatest = "org.scalatest" %% "scalatest" % "2.2.1"
+  val scalatest = "org.scalatest" %% "scalatest" % "2.2.3"
 
   val lz4 = "net.jpountz.lz4" % "lz4" % "1.2.0"
 
-  val async_http_client = "com.ning" % "async-http-client" % "1.8.12"
+  val async_http_client = "com.ning" % "async-http-client" % "1.9.3"
 
   val shapeless = "com.chuusai" %% "shapeless" % "2.0.0"
 
   val hsqldb = "org.hsqldb" % "hsqldb" % "2.3.2"
 
-  val guava = "com.google.guava" % "guava" % "17.0"
+  val guava = "com.google.guava" % "guava" % "18.0"
 
   val jsr305 = "com.google.code.findbugs" % "jsr305" % "3.0.0"
 
-  val jsr310 = "org.threeten" % "threetenbp" % "1.0"
+  val jsr310 = "org.threeten" % "threetenbp" % "1.2"
 
   object slf4j {
     object constants {
-      val version = "1.7.7"
+      val version = "1.7.9"
       val name = "slf4j"
       val group = "org.slf4j"
     }
@@ -55,7 +55,7 @@ object Dependencies {
   }
   object netty {
     object constants {
-      val version = "4.0.23.Final"
+      val version = "4.0.24.Final"
       val name = "netty"
       val group = "io.netty"
     }
@@ -64,7 +64,7 @@ object Dependencies {
   }
   object jackson {
     object constants {
-      val version = "2.4.2"
+      val version = "2.4.4"
       val name = "jackson"
       object group {
         val prefix = s"com.fasterxml.$name"
@@ -97,7 +97,7 @@ object Dependencies {
   }
   object akka {
     object constants {
-      val version = "2.3.5"
+      val version = "2.3.8"
       val name = "akka"
       val group = "com.typesafe.akka"
     }
