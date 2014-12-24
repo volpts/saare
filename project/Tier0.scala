@@ -28,6 +28,7 @@ object Tier0 extends Tier(0) {
     shapeless,
     scalaz.core,
     scalaz.effect,
+    jsr310,
     scalatest % "test",
     logback % "test" ,
     slf4j.to.jul % "test",

@@ -23,6 +23,7 @@ import scala.reflect.macros._
 import scala.collection.immutable._
 import akka.util._
 import scala.reflect.macros.whitebox.Context
+import org.threeten.bp._
 
 trait Reflect {
   val c: Context
@@ -187,7 +188,7 @@ trait Reflect {
       q"${q"$variant.asObject.value"}.mapValues($reflectObject.readVariant[$tp](_))"
     } else if (`type` =:= weakTypeOf[String]) q"$variant.asText.value"
     else if (`type` =:= weakTypeOf[java.util.UUID]) q"$variant.asUUID.value"
-    else if (`type` <:< weakTypeOf[java.time.Instant]) q"$variant.asTimestamp.value"
+    else if (`type` <:< weakTypeOf[Instant]) q"$variant.asTimestamp.value"
     else sys.error(s"Type ${`type`} is not (yet) supported by Reflect#readVariant!")
     val ret = q"{ val $variant = $x; $tree }"
     typecheck(ret, weakTypeOf[A])
@@ -245,7 +246,7 @@ trait Reflect {
       q"${weakTypeOf[Object].typeSymbol.companion}($x.mapValues($reflectObject.writeVariant[$tp](_)))"
     } else if (`type` =:= weakTypeOf[String]) q"${weakTypeOf[Text].typeSymbol.companion}($x)"
     else if (`type` =:= weakTypeOf[java.util.UUID]) q"${weakTypeOf[UUID].typeSymbol.companion}($x)"
-    else if (`type` =:= weakTypeOf[java.time.Instant]) q"${weakTypeOf[Timestamp].typeSymbol.companion}($x)"
+    else if (`type` =:= weakTypeOf[Instant]) q"${weakTypeOf[Timestamp].typeSymbol.companion}($x)"
     else sys.error(s"Type ${`type`} is not (yet) supported by Reflect#readVariant!")
     typecheck(tree, weakTypeOf[Variant])
     tree

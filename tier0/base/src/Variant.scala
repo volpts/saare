@@ -22,6 +22,7 @@ import akka.util._
 import scala.util.control.ControlThrowable
 import scala.language.experimental.macros
 import scalaz._, Scalaz._
+import org.threeten.bp._
 
 sealed abstract class Variant {
   import Variant._
@@ -163,7 +164,7 @@ object Variant {
     def apply(x: String): Variant = value.get(x).getOrElse(Undefined)
   }
   case class Text(value: String) extends Variant
-  case class Timestamp(value: java.time.Instant) extends Variant
+  case class Timestamp(value: Instant) extends Variant
   case class UUID(value: java.util.UUID) extends Variant
 }
 
