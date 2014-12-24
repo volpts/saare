@@ -53,7 +53,7 @@ abstract class Common extends Build {
     fork := true,
     resolvers += Resolver.sonatypeRepo("releases"),
     libraryDependencies <+= scalaVersion("org.scala-lang" % "scala-reflect" % _),
-    licenses += ("Apache-2.0", url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
+    licenses += ("LGPL-3.0", url("http://www.gnu.org/licenses/lgpl-3.0.txt")),
     incOptions := incOptions.value.withNameHashing(true),
     scalacOptions ++= Seq(
       "-encoding", "utf-8",
